@@ -1,0 +1,11 @@
+# lebai control: only control
+roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
+
+# lebai moveit: control with moveit
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
+
+# launch orbbec
+roslaunch orbbec_camera gemini2.launch
+
+# launch rviz
+rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
