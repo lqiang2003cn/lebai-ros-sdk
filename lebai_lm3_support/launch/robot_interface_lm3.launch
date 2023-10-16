@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="robot_ip" doc="IP of controller" />
-  <arg name="has_gripper" default="0" />
+  <arg name="has_gripper" default="1" />
 
   <rosparam command="load" file="$(find lebai_lm3_support)/config/joint_names_lm3.yaml" />
   <rosparam command="load" file="$(find lebai_lm3_support)/config/joint_names_gripper.yaml" if="$(arg has_gripper)"/>
