@@ -36,20 +36,20 @@
 <xacro:property name="mass_link6" value="0.584"/>
 
 <!-- Limit of joints-->
-<xacro:property name="joint1_upper_limit" value="6.28" />
-<xacro:property name="joint2_upper_limit" value="6.28" />
-<xacro:property name="joint3_upper_limit" value="6.28" />
-<xacro:property name="joint4_upper_limit" value="6.28" />
-<xacro:property name="joint5_upper_limit" value="6.28" />
-<xacro:property name="joint6_upper_limit" value="6.28" />
+<xacro:property name="joint1_upper_limit" value="3.14" />
+<xacro:property name="joint2_upper_limit" value="0.314" />
+<xacro:property name="joint3_upper_limit" value="3.14" />
+<xacro:property name="joint4_upper_limit" value="3.14" />
+<xacro:property name="joint5_upper_limit" value="3.14" />
+<xacro:property name="joint6_upper_limit" value="3.14" />
 
 
-<xacro:property name="joint1_lower_limit" value="-6.28" />
-<xacro:property name="joint2_lower_limit" value="-6.28" />
-<xacro:property name="joint3_lower_limit" value="-6.28" />
-<xacro:property name="joint4_lower_limit" value="-6.28" />
-<xacro:property name="joint5_lower_limit" value="-6.28" />
-<xacro:property name="joint6_lower_limit" value="-6.28" />
+<xacro:property name="joint1_lower_limit" value="-3.14" />
+<xacro:property name="joint2_lower_limit" value="-3.455" />
+<xacro:property name="joint3_lower_limit" value="-3.14" />
+<xacro:property name="joint4_lower_limit" value="-3.14" />
+<xacro:property name="joint5_lower_limit" value="-3.14" />
+<xacro:property name="joint6_lower_limit" value="-3.14" />
 
 <xacro:property name="joint1_vel_limit" value="3.14" />
 <xacro:property name="joint2_vel_limit" value="3.14" />

@@ -2,7 +2,8 @@
 roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
 
 # lebai moveit: control with moveit
-roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252
+roslaunch lebai_lm3_moveit_config run.launch sim:=true
 
 # launch orbbec
 roslaunch orbbec_camera gemini2.launch
