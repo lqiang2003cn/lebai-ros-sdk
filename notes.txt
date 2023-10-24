@@ -3,10 +3,15 @@ roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.
 
 # lebai moveit: control with moveit
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
 roslaunch lebai_lm3_moveit_config run.launch sim:=true
 
 # launch orbbec
 roslaunch orbbec_camera gemini2.launch
+roslaunch orbbec_camera pal_aruco_ros_single.launch
 
 # launch rviz
 rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
+
+# data
+1.6378121124656506, -2.0494942064144595, 2.052370420391745, -1.5819176875070675, -1.571083948192625, -1.5609213254728826

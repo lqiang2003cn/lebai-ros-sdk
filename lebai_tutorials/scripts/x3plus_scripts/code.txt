@@ -1,0 +1,51 @@
+# block_pos, block_ori = query_pose(listener, "base_footprint", marker_to_search)
+    # if block_pos is None or block_ori is None:
+    #     print("block" + marker_to_search + " not found")
+    #     exit(0)
+    # print("block position: ", block_pos)
+    # print("block orientation: ", block_ori)
+    #
+    # # found the block
+
+# pos, ori = query_pose(listener, "base_footprint", "arm_link1")
+# start_matrix = quaternion_matrix(ori)
+# print("start matrix:", start_matrix)
+# print("start x:", start_matrix[0:3, 0])
+# print("start y:", start_matrix[0:3, 1])
+# print("start z:", start_matrix[0:3, 2])
+
+# current_joints = get_current_angles()
+# print("current joints:", current_joints)
+# interp = np.interp(current_joints[5], [30, 180], [0, 90])
+# print("grip interp:", interp)
+
+ # go_to_position_by_arm_joints([90, 145, 0, 45, 90]) # init position
+# go_to_position_by_arm_joints([90.0, 40.0, 5.0, 48.0, 89.0])  # lower middle
+#
+
+# create_go_to_position_service()
+# pos = {"position": "test position"}
+# init_position = {"position": "camera down position higher"}
+# open_gripper()
+# close_gripper()
+
+# listener = tf.TransformListener()
+# go_to_position_by_arm_joints(higher_right_joints)
+    # sleep(1)
+
+    # search the block
+    # block_pos, block_ori = None, None
+    # for i in range(50, 135, 5):
+    #     higher_right_joints[0] = i
+    #     go_to_position_by_arm_joints(higher_right_joints)
+    #     block_pos, block_ori = query_pose(listener, "base_footprint", marker_to_search)
+    #     if block_pos is None or block_ori is None:
+    #         continue
+    #     else:
+    #         break
+    #
+    # if block_pos is None or block_ori is None:
+    #     print("block" + marker_to_search + " not found")
+    #     exit(0)
+#
+# # found the object
