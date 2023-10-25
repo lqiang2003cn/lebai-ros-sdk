@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # pos, rot = query_pose(listener, "base_footprint", "mono_link")
     # pos, rot = query_pose(listener, "mono_link", "ar_marker_107")
 
-    pos, rot = query_pose(listener, "map", "base_footprint")
+    pos, rot = query_pose(listener, "world", "base_link")
     print("pos:", pos)
     print("rot:", rot)
     print("rot euler:\n", euler_from_quaternion(rot))

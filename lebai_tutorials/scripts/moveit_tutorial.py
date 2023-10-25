@@ -48,7 +48,13 @@ import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
 import rospy
+import tf
+from geometry_msgs.msg import PoseStamped, Pose
 from moveit_commander.conversions import pose_to_list
+from tf import broadcaster
+from tf.transformations import quaternion_matrix, quaternion_from_matrix
+
+import arm_utils as autil
 
 
 def all_close(goal, actual, tolerance):
@@ -118,12 +124,15 @@ class MoveGroupPythonIntefaceTutorial(object):
     def go_to_pose_goal(self):
         move_group = self.move_group
         # move_group.set_pose_reference_frame('/tool0')
-        curr_pos = move_group.get_current_pose()
         pose_goal = geometry_msgs.msg.Pose()
-        pose_goal.orientation = curr_pos.pose.orientation
-        pose_goal.position.x = curr_pos.pose.position.x + 0.05
-        pose_goal.position.y = curr_pos.pose.position.y
-        pose_goal.position.z = curr_pos.pose.position.z
+
+        pose_goal.orientation.x = 0.99374579
+        pose_goal.orientation.y = -0.11019219
+        pose_goal.orientation.z = 0.01154192
+        pose_goal.orientation.w = -0.01359481
+        pose_goal.position.x = 0.075479
+        pose_goal.position.y = -0.4323
+        pose_goal.position.z = 0.15427 + 0.31
 
         move_group.set_pose_target(pose_goal)
         plan = move_group.plan()
@@ -132,12 +141,91 @@ class MoveGroupPythonIntefaceTutorial(object):
         move_group.stop()
         move_group.clear_pose_targets()
 
-    def plan_cartesian_path(self, scale=1):
+    @staticmethod
+    def transform_to_tool0():
+        # get pose from tf
+        listener = tf.TransformListener()
+        # box_pos, box_rot = autil.query_pose(listener, 'world', 'aruco_marker_frame')
+        tool0_pos, tool0_ori = autil.query_pose(listener, 'world', 'tool0')
+
+        # table_size = [0.1, 0.2, 0.02]
+        # table_pose = PoseStamped()
+        # table_pose.header.frame_id = 'base_link'
+        # table_pose.pose.position.x = 0.2
+        # table_pose.pose.position.y = 0
+        # table_pose.pose.position.z = 0.2 + table_size[2] / 2.0
+        # table_pose.pose.orientation.w = 1.0
+        # scene.add_box('obj', table_pose, table_size)
+
+        ps = PoseStamped()
+        ps.header.frame_id = 'aruco_marker_frame'
+        ps.pose.position.x = -0.3
+        ps.pose.position.y = 0
+        ps.pose.position.z = -0.015
+        ps.pose.orientation.x = 0
+        ps.pose.orientation.y = 0
+        ps.pose.orientation.z = 0
+        ps.pose.orientation.w = 1
+        box_above_pose = autil.transform_pose(listener, 'world', ps)
+
+        # handle rotation:
+        box_matrix = quaternion_matrix([box_above_pose.orientation.x, box_above_pose.orientation.y, box_above_pose.orientation.z, box_above_pose.orientation.w])
+        tool0_matrix = quaternion_matrix(tool0_ori)
+
+        # x axis of tool0 equals z axis of box
+        tool0_matrix[0:3, 0] = box_matrix[0:3, 2]
+
+        # y axis of tool0  equals -y axis of box
+        tool0_matrix[0:3, 1] = -box_matrix[0:3, 1]
+
+        new_tool0_quaternion = quaternion_from_matrix(tool0_matrix)
+
+        new_tool0_pose = Pose()
+        new_tool0_pose.orientation.x = new_tool0_quaternion[0]
+        new_tool0_pose.orientation.y = new_tool0_quaternion[1]
+        new_tool0_pose.orientation.z = new_tool0_quaternion[2]
+        new_tool0_pose.orientation.w = new_tool0_quaternion[3]
+        new_tool0_pose.position = box_above_pose.position
+        return new_tool0_pose
+
+        # return box_above_pose
+
+        # r = rospy.Rate(10)
+        # while True:
+        #     bc = tf.TransformBroadcaster()
+        #     acc_pos = [box_above_pose.position.x, box_above_pose.position.y, box_above_pose.position.z]
+        #     acc_ori = [box_above_pose.orientation.x, box_above_pose.orientation.y, box_above_pose.orientation.z, box_above_pose.orientation.w]
+        #     bc.sendTransform(acc_pos, acc_ori, rospy.Time().now(), 'aruco_center_code', 'world')
+        #     r.sleep()
+
+        # tool0_quaternion = rot
+        # tool0_matrix = quaternion_matrix(tool0_quaternion)
+        # print tool0_matrix
+        #
+        # # tool0_euler = euler_from_quaternion(tool0_quaternion)
+        # # print tool0_euler
+        # box_quaternion = [0.08464, 0.69187, -0.071195, 0.7135]
+        # box_matrix = quaternion_matrix(box_quaternion)
+        # print box_matrix
+        #
+        # # x axis of tool0 equals z axis of box
+        # tool0_matrix[0:3, 0] = box_matrix[0:3, 2]
+        #
+        # # y axis of tool0  equals -y axis of box
+        # tool0_matrix[0:3, 1] = -box_matrix[0:3, 1]
+        #
+        # new_tool0_quaternion = quaternion_from_matrix(tool0_matrix)
+        # print new_tool0_quaternion
+
+    def plan_cartesian_path(self):
         move_group = self.move_group
         waypoints = []
-        wpose = move_group.get_current_pose().pose
-        wpose.position.x += scale * 0.1  # First move up (z)
-        waypoints.append(copy.deepcopy(wpose))
+        # wpose = move_group.get_current_pose().pose
+
+        box_above_pose = MoveGroupPythonIntefaceTutorial.transform_to_tool0()
+
+        # wpose.position.x += scale * 0.05
+        waypoints.append(copy.deepcopy(box_above_pose))
         (plan, fraction) = move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         return plan, fraction
 
@@ -147,7 +235,7 @@ class MoveGroupPythonIntefaceTutorial(object):
         display_trajectory = moveit_msgs.msg.DisplayTrajectory()
         display_trajectory.trajectory_start = robot.get_current_state()
         display_trajectory.trajectory.append(plan)
-        display_trajectory_publisher.publish(display_trajectory);
+        display_trajectory_publisher.publish(display_trajectory)
 
     def execute_plan(self, plan):
         move_group = self.move_group
@@ -224,9 +312,12 @@ class MoveGroupPythonIntefaceTutorial(object):
 def main():
     try:
         tutorial = MoveGroupPythonIntefaceTutorial()
-        tutorial.go_to_joint_state()
+        # tutorial.go_to_joint_state()
         # tutorial.go_to_pose_goal()
-
+        cartesian_plan, fraction = tutorial.plan_cartesian_path()
+        tutorial.display_trajectory(cartesian_plan)
+        tutorial.execute_plan(cartesian_plan)
+        print 'c'
 
         # print "============ Press `Enter` to execute a movement using a pose goal ..."
         # raw_input()

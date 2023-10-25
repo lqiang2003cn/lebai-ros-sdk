@@ -5,10 +5,15 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /MotionPlanning1/Planning Request1
+        - /TF1
         - /TF1/Frames1
-        - /Camera1/Status1
-      Splitter Ratio: 0.44064387679100037
-    Tree Height: 416
+        - /TF1/Frames1/aruco_marker_frame1
+        - /TF1/Frames1/tool01
+        - /TF1/Tree1
+        - /Camera1
+        - /Pose1
+      Splitter Ratio: 0.4969818890094757
+    Tree Height: 405
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -303,6 +308,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        aruco_marker_frame:
+          Value: true
         base:
           Value: false
         base_link:
@@ -320,7 +327,7 @@ Visualization Manager:
         camera_ir_optical_frame:
           Value: false
         camera_link:
-          Value: false
+          Value: true
         gripper_base_link:
           Value: false
         gripper_l_link1:
@@ -383,6 +390,8 @@ Visualization Manager:
                               gripper_r_link_finger:
                                 {}
           camera_link:
+            aruco_marker_frame:
+              {}
             camera_color_frame:
               camera_color_optical_frame:
                 {}
@@ -497,7 +506,7 @@ Visualization Manager:
       Value: true
       Visual Enabled: true
     - Class: rviz/Camera
-      Enabled: false
+      Enabled: true
       Image Rendering: background and overlay
       Image Topic: /camera/color/image_raw
       Name: Camera
@@ -505,11 +514,12 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: false
+      Value: true
       Visibility:
         Grid: true
         MotionPlanning: true
         PointCloud2: true
+        Pose: true
         RobotModel: true
         TF: true
         Value: false
@@ -542,6 +552,21 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.05000000074505806
+      Head Radius: 0.009999999776482582
+      Name: Pose
+      Shaft Length: 0.30000001192092896
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic: /aruco_single/pose
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -558,25 +583,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 1.9330048561096191
+      Distance: 1.6548211574554443
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.0025737881660461426
-        Y: 0.3697682023048401
+        X: 0.34901756048202515
+        Y: -0.17518536746501923
         Z: 4.470405201573158e-8
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.39479589462280273
+      Pitch: 0.5547981858253479
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 0.932293176651001
+      Yaw: 5.8391876220703125
     Saved: ~
 Window Geometry:
   Camera:
@@ -592,7 +617,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000200000000000001f3000003a7fc0200000007fb000000100044006900730070006c006100790073010000003d000001dd000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720100000220000000410000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000002670000017d0000017d00ffffff0000000100000186000003a7fc0200000001fb0000000c00430061006d006500720061000000003d000003a70000001600ffffff0000055c000003a700000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000200000000000001f3000003a7fc0200000006fb000000100044006900730070006c006100790073010000003d000001d2000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720100000215000000410000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000025c000001880000017d00ffffff0000000100000186000003a7fc0200000002fb0000000c00430061006d006500720061010000003d000003a70000001600fffffffb0000000c00430061006d006500720061000000003d000003a70000000000000000000003d0000003a700000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1877

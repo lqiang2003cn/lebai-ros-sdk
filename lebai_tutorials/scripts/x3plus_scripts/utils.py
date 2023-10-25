@@ -8,8 +8,6 @@ from time import sleep
 import rospy
 from tf.transformations import translation_matrix, quaternion_matrix, quaternion_from_matrix, translation_from_matrix, \
     euler_from_quaternion
-from yahboomcar_msgs.msg import ArmJoint
-from yahboomcar_msgs.srv import RobotArmArray, RobotArmArrayRequest
 
 DE2RA = math.pi / 180
 RA2DE = 180 / math.pi
