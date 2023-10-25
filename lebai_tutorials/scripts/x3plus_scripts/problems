@@ -7,6 +7,9 @@ rosrun tf static_transform_publisher x, y, z, yaw(rotate z), pitch(rotate y), ro
 rosrun tf static_transform_publisher 0, 0, 0, -1.57, 0, 0 mono_link yaw_mono_link 100
 rosrun tf tf_echo base_footprint ar_marker_101
 
+
+
+
 # visualize aruco center
 rosrun tf static_transform_publisher 0.1047, -0.4550, 0.1547, 0.0729, 0.7042, -0.0591 0.7037 world aruco_center 10
 x: 0.10470063174907555

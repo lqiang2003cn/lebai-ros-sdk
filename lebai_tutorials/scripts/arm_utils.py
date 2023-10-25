@@ -1,7 +1,13 @@
 import numpy as np
 import rospy
-from geometry_msgs.msg import Pose, PoseStamped
 from tf.transformations import translation_matrix, quaternion_matrix
+
+
+def get_matrix_from_pos_and_quat(pos, quat):
+    t_mat = translation_matrix(pos)
+    q_mat = quaternion_matrix(quat)
+    p_mat = np.dot(t_mat, q_mat)
+    return p_mat
 
 
 def query_pose(tf_listener, target_frame, source_frame):
