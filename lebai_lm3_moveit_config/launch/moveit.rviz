@@ -5,11 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /MotionPlanning1/Planning Request1
-        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Camera1
-        - /Pose1
       Splitter Ratio: 0.4969818890094757
     Tree Height: 404
   - Class: rviz/Help
@@ -581,7 +578,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.011000156402588
+      Distance: 1.8976447582244873
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -596,10 +593,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.25979721546173096
+      Pitch: 0.18479695916175842
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 3.2960073947906494
+      Yaw: 1.3710049390792847
     Saved: ~
 Window Geometry:
   Camera:
