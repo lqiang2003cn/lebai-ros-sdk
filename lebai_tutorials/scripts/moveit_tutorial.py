@@ -47,6 +47,7 @@ import sys
 import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
+import numpy as np
 import rospy
 import tf
 from geometry_msgs.msg import PoseStamped, Pose
@@ -123,16 +124,23 @@ class MoveGroupPythonIntefaceTutorial(object):
 
     def go_to_pose_goal(self):
         move_group = self.move_group
-        # move_group.set_pose_reference_frame('/tool0')
+        curr_pose = move_group.get_current_pose().pose
+
         pose_goal = geometry_msgs.msg.Pose()
 
-        pose_goal.orientation.x = 0.99374579
-        pose_goal.orientation.y = -0.11019219
-        pose_goal.orientation.z = 0.01154192
-        pose_goal.orientation.w = -0.01359481
-        pose_goal.position.x = 0.075479
-        pose_goal.position.y = -0.4323
-        pose_goal.position.z = 0.15427 + 0.31
+        pose_ori = np.eye(4)
+        pose_ori[0:3, 0] = [0, 0, 1]
+        pose_ori[0:3, 1] = [-1, 0, 0]
+        pose_ori[0:3, 2] = [0, -1, 0]
+        pose_ori_quat = quaternion_from_matrix(pose_ori)
+
+        pose_goal.position.x = curr_pose.position.x
+        pose_goal.position.y = curr_pose.position.y
+        pose_goal.position.z = curr_pose.position.z
+        pose_goal.orientation.x = pose_ori_quat[0]
+        pose_goal.orientation.y = pose_ori_quat[1]
+        pose_goal.orientation.z = pose_ori_quat[2]
+        pose_goal.orientation.w = pose_ori_quat[3]
 
         move_group.set_pose_target(pose_goal)
         plan = move_group.plan()
@@ -159,9 +167,9 @@ class MoveGroupPythonIntefaceTutorial(object):
 
         ps = PoseStamped()
         ps.header.frame_id = 'aruco_marker_frame'
-        ps.pose.position.x = -0.3
+        ps.pose.position.x = 0
         ps.pose.position.y = 0
-        ps.pose.position.z = -0.015
+        ps.pose.position.z = 0.05 + 0.2
         ps.pose.orientation.x = 0
         ps.pose.orientation.y = 0
         ps.pose.orientation.z = 0
@@ -172,11 +180,11 @@ class MoveGroupPythonIntefaceTutorial(object):
         box_matrix = quaternion_matrix([box_above_pose.orientation.x, box_above_pose.orientation.y, box_above_pose.orientation.z, box_above_pose.orientation.w])
         tool0_matrix = quaternion_matrix(tool0_ori)
 
-        # x axis of tool0 equals z axis of box
-        tool0_matrix[0:3, 0] = box_matrix[0:3, 2]
+        # x axis of tool0 equals -x axis of box
+        tool0_matrix[0:3, 0] = -box_matrix[0:3, 0]
 
-        # y axis of tool0  equals -y axis of box
-        tool0_matrix[0:3, 1] = -box_matrix[0:3, 1]
+        # y axis of tool0  equals y axis of box
+        tool0_matrix[0:3, 1] = box_matrix[0:3, 1]
 
         new_tool0_quaternion = quaternion_from_matrix(tool0_matrix)
 
@@ -240,6 +248,8 @@ class MoveGroupPythonIntefaceTutorial(object):
     def execute_plan(self, plan):
         move_group = self.move_group
         move_group.execute(plan, wait=True)
+        move_group.stop()
+        move_group.clear_pose_targets()
 
     def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
         box_name = self.box_name
@@ -313,10 +323,11 @@ def main():
     try:
         tutorial = MoveGroupPythonIntefaceTutorial()
         # tutorial.go_to_joint_state()
-        # tutorial.go_to_pose_goal()
-        cartesian_plan, fraction = tutorial.plan_cartesian_path()
-        tutorial.display_trajectory(cartesian_plan)
-        tutorial.execute_plan(cartesian_plan)
+        tutorial.go_to_pose_goal()
+
+        # cartesian_plan, fraction = tutorial.plan_cartesian_path()
+        # tutorial.display_trajectory(cartesian_plan)
+        # tutorial.execute_plan(cartesian_plan)
         print 'c'
 
         # print "============ Press `Enter` to execute a movement using a pose goal ..."

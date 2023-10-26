@@ -1,15 +1,14 @@
 import numpy as np
 from tf.transformations import quaternion_from_matrix, quaternion_matrix, euler_from_quaternion
 import arm_utils as autils
-
-camera_to_aruco_pos = [0.2071, -0.0217, 0.66547]
-camera_to_aruco_ori = [-0.59216, 0.67597, -0.31675, -0.30344]
+camera_to_aruco_pos = [0.21204, -0.023957, 0.67387]
+camera_to_aruco_ori = [-0.63449, 0.64108, -0.28812, -0.32159]
 trans_matrix = autils.get_matrix_from_pos_and_quat(camera_to_aruco_pos, camera_to_aruco_ori)
 box_in_world = np.eye(4)
 box_in_world[0:3, 0] = [-1, 0, 0]
 box_in_world[0:3, 1] = [0, -1, 0]
 box_in_world[0:3, 2] = [0, 0, 1]
-box_in_world[0:3, 3] = [-0.03, -0.113, 0.01]
+box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
 camera_in_world = np.matmul(box_in_world, np.linalg.inv(trans_matrix))
 print camera_in_world
 print quaternion_from_matrix(camera_in_world)

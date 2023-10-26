@@ -27,6 +27,7 @@ def query_pose(tf_listener, target_frame, source_frame):
 
 
 def transform_pose(tf_listener, target_frame, pose):
+    tf_listener.clear()
     transformed_pose = None
     while not rospy.is_shutdown():
         try:
