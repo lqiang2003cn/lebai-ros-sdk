@@ -41,7 +41,7 @@
 <xacro:property name="joint3_upper_limit" value="3.14" />
 <xacro:property name="joint4_upper_limit" value="3.14" />
 <xacro:property name="joint5_upper_limit" value="3.14" />
-<xacro:property name="joint6_upper_limit" value="3.14" />
+<xacro:property name="joint6_upper_limit" value="6.28" />
 
 
 <xacro:property name="joint1_lower_limit" value="-3.14" />
@@ -49,7 +49,7 @@
 <xacro:property name="joint3_lower_limit" value="-3.14" />
 <xacro:property name="joint4_lower_limit" value="-3.14" />
 <xacro:property name="joint5_lower_limit" value="-3.14" />
-<xacro:property name="joint6_lower_limit" value="-3.14" />
+<xacro:property name="joint6_lower_limit" value="-6.28" />
 
 <xacro:property name="joint1_vel_limit" value="3.14" />
 <xacro:property name="joint2_vel_limit" value="3.14" />

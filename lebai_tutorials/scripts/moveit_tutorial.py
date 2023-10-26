@@ -126,14 +126,13 @@ class MoveGroupPythonIntefaceTutorial(object):
         move_group = self.move_group
         curr_pose = move_group.get_current_pose().pose
 
+        # set to horizontal
         pose_goal = geometry_msgs.msg.Pose()
-
         pose_ori = np.eye(4)
         pose_ori[0:3, 0] = [0, 0, 1]
         pose_ori[0:3, 1] = [-1, 0, 0]
         pose_ori[0:3, 2] = [0, -1, 0]
         pose_ori_quat = quaternion_from_matrix(pose_ori)
-
         pose_goal.position.x = curr_pose.position.x
         pose_goal.position.y = curr_pose.position.y
         pose_goal.position.z = curr_pose.position.z
@@ -177,7 +176,8 @@ class MoveGroupPythonIntefaceTutorial(object):
         box_above_pose = autil.transform_pose(listener, 'world', ps)
 
         # handle rotation:
-        box_matrix = quaternion_matrix([box_above_pose.orientation.x, box_above_pose.orientation.y, box_above_pose.orientation.z, box_above_pose.orientation.w])
+        box_matrix = quaternion_matrix([box_above_pose.orientation.x, box_above_pose.orientation.y, box_above_pose.orientation.z,
+                                        box_above_pose.orientation.w])
         tool0_matrix = quaternion_matrix(tool0_ori)
 
         # x axis of tool0 equals -x axis of box
@@ -227,10 +227,9 @@ class MoveGroupPythonIntefaceTutorial(object):
 
     def plan_cartesian_path(self):
         move_group = self.move_group
+        box_above_pose = MoveGroupPythonIntefaceTutorial.transform_to_tool0()
         waypoints = []
         # wpose = move_group.get_current_pose().pose
-
-        box_above_pose = MoveGroupPythonIntefaceTutorial.transform_to_tool0()
 
         # wpose.position.x += scale * 0.05
         waypoints.append(copy.deepcopy(box_above_pose))
@@ -322,13 +321,31 @@ class MoveGroupPythonIntefaceTutorial(object):
 def main():
     try:
         tutorial = MoveGroupPythonIntefaceTutorial()
-        # tutorial.go_to_joint_state()
-        tutorial.go_to_pose_goal()
+        listener = tf.TransformListener()
+
+        # min rotate angle
+        waypoints = []
+
+        tool0_z_axis = autil.query_pose_as_matrix(listener, 'world', 'tool0')[0:3, 2]
+        position, ori = autil.get_min_rotation_pose(listener, tool0_z_axis, 'aruco_marker_frame')
+        box_above_pose = autil.get_pose_msg_from_pos_and_ori(position, ori)
+
+        # waypoints.append(copy.deepcopy(box_above_pose))
+
+        box_grap_pose = copy.deepcopy(box_above_pose)
+        box_grap_pose.position.z = 0.06
+        waypoints.append(box_grap_pose)
+
+        plan, _ = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        tutorial.display_trajectory(plan)
+        tutorial.execute_plan(plan)
+        print 'c'
 
         # cartesian_plan, fraction = tutorial.plan_cartesian_path()
-        # tutorial.display_trajectory(cartesian_plan)
-        # tutorial.execute_plan(cartesian_plan)
-        print 'c'
+        # tutorial.go_to_joint_state()
+        # tutorial.go_to_pose_goal()
+
+
 
         # print "============ Press `Enter` to execute a movement using a pose goal ..."
         # raw_input()

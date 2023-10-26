@@ -1,6 +1,10 @@
 import numpy as np
 from tf.transformations import quaternion_from_matrix, quaternion_matrix, euler_from_quaternion
 import arm_utils as autils
+
+print np.sqrt(72)
+
+
 camera_to_aruco_pos = [0.21204, -0.023957, 0.67387]
 camera_to_aruco_ori = [-0.63449, 0.64108, -0.28812, -0.32159]
 trans_matrix = autils.get_matrix_from_pos_and_quat(camera_to_aruco_pos, camera_to_aruco_ori)
