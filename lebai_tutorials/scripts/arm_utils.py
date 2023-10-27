@@ -181,7 +181,7 @@ def get_object_above_pose(listener, obj_pose_matrix, prepick_diff):
     return prepick_mat
 
 
-def get_min_rotation_pose(listener, current_axis, obj_frame):
+def get_min_pose(listener, current_axis, obj_frame):
     obj_pose_matrix = query_pose_as_matrix(listener, 'world', obj_frame)
     min_axis = -1
     min_abs_angle = np.inf
@@ -232,7 +232,7 @@ def get_min_rotation_pose(listener, current_axis, obj_frame):
     prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
 
     prepick_pos, prepick_ori = get_pos_and_quat_from_matrix(prepick_mat)
-    return prepick_pos, prepick_ori
+    return prepick_pos, prepick_ori, min_abs_angle
 
 
 def get_pose_msg_from_pos_and_ori(pos, ori):

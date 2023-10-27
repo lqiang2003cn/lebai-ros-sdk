@@ -47,6 +47,7 @@ import sys
 import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
+from moveit_msgs.msg import TrajectoryConstraints
 import numpy as np
 import rospy
 import tf
@@ -56,6 +57,9 @@ from tf import broadcaster
 from tf.transformations import quaternion_matrix, quaternion_from_matrix
 
 import arm_utils as autil
+from moveit_msgs.msg import OrientationConstraint
+from geometry_msgs.msg import Quaternion
+import moveit_commander
 
 
 def all_close(goal, actual, tolerance):
@@ -116,7 +120,7 @@ class MoveGroupPythonIntefaceTutorial(object):
     def go_to_joint_state(self):
         move_group = self.move_group
         joint_goal = move_group.get_current_joint_values()
-        joint_goal[0] = 1
+        joint_goal[0] += 0.1
         p = move_group.plan(joint_goal)
         self.display_trajectory(p)
         self.execute_plan(p)
@@ -250,8 +254,7 @@ class MoveGroupPythonIntefaceTutorial(object):
         move_group.stop()
         move_group.clear_pose_targets()
 
-    def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
-        box_name = self.box_name
+    def wait_for_state_update(self, box_name, box_is_known=False, box_is_attached=False, timeout=100000000):
         scene = self.scene
         start = rospy.get_time()
         seconds = rospy.get_time()
@@ -321,33 +324,135 @@ class MoveGroupPythonIntefaceTutorial(object):
 def main():
     try:
         tutorial = MoveGroupPythonIntefaceTutorial()
+        tutorial.scene.clear()
         listener = tf.TransformListener()
 
-        # min rotate angle
-        waypoints = []
+        # add objects to scene
+        desk_pose = geometry_msgs.msg.PoseStamped()
+        desk_pose.header.frame_id = "world"
+        desk_pose.pose.orientation.w = 1.0
+        desk_pose.pose.position.z = -0.1
+        tutorial.scene.add_box("desk", desk_pose, size=(1.4, 1.4, 0.25))
+        tutorial.wait_for_state_update('desk', box_is_known=True, box_is_attached=False)
 
-        tool0_z_axis = autil.query_pose_as_matrix(listener, 'world', 'tool0')[0:3, 2]
-        position, ori = autil.get_min_rotation_pose(listener, tool0_z_axis, 'aruco_marker_frame')
-        box_above_pose = autil.get_pose_msg_from_pos_and_ori(position, ori)
+        link6_box_pose = geometry_msgs.msg.PoseStamped()
+        link6_box_pose.header.frame_id = "link_6"
+        link6_box_pose.pose.orientation.w = 1.0
+        link6_box_pose.pose.position.y = -0.047
+        link6_box_pose.pose.position.z = -0.025
+        tutorial.scene.add_box("link6_box", link6_box_pose, size=(0.01, 0.022, 0.01))
+        tutorial.wait_for_state_update('link6_box', box_is_known=True, box_is_attached=False)
+        tutorial.scene.attach_box('link_6', 'link6_box', touch_links=['link_6'])
+        tutorial.wait_for_state_update('link6_box', box_is_known=False, box_is_attached=True)
 
-        # waypoints.append(copy.deepcopy(box_above_pose))
+        gripper_box_pose = geometry_msgs.msg.PoseStamped()
+        gripper_box_pose.header.frame_id = "gripper_base_link"
+        gripper_box_pose.pose.orientation.w = 1.0
+        gripper_box_pose.pose.position.x = -0.05
+        gripper_box_pose.pose.position.z = 0.01
+        tutorial.scene.add_box("gripper_box", gripper_box_pose, size=(0.022, 0.01, 0.01))
+        tutorial.wait_for_state_update('gripper_box', box_is_known=True, box_is_attached=False)
+        tutorial.scene.attach_box('gripper_base_link', 'gripper_box', touch_links=['gripper_base_link'])
+        tutorial.wait_for_state_update('gripper_box', box_is_known=False, box_is_attached=True)
 
-        box_grap_pose = copy.deepcopy(box_above_pose)
-        box_grap_pose.position.z = 0.06
-        waypoints.append(box_grap_pose)
 
-        plan, _ = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        tutorial.display_trajectory(plan)
-        tutorial.execute_plan(plan)
-        print 'c'
+
+        ###### use only world -y axis ######
+        # aruco_frame = 'aruco_marker_frame'
+        # world_my_pos, world_my_ori, world_my_min_angle = autil.get_min_pose(listener, [0, -1, 0], aruco_frame)
+        # print 'world -y axis angle:' + str(world_my_min_angle)
+        # is_plan_found = False
+        # prepick_pose = autil.get_pose_msg_from_pos_and_ori(world_my_pos, world_my_ori)
+        # waypoints = [copy.deepcopy(prepick_pose)]
+        # plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        # if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+        #     print 'better plan found'
+        #     is_plan_found = True
+        #     tutorial.display_trajectory(plan)
+
+
+        ########### use both world -y axis and tool0 z axis ############
+        # aruco_frame = 'aruco_marker_frame'
+        # listener = tf.TransformListener()
+        # # world -y axis plan
+        # world_my_pos, world_my_ori, world_my_min_angle = autil.get_min_pose(listener, [0, -1, 0], aruco_frame)
+        # print 'world -y axis angle:' + str(world_my_min_angle)
+        #
+        # # tool0 z axis plan
+        # tool0_z_axis = autil.query_pose_as_matrix(listener, 'world', 'tool0')[0:3, 2]
+        # tool0_z_pos, tool0_z_ori, tool0_z_min_angle = autil.get_min_pose(listener, tool0_z_axis, aruco_frame)
+        # print 'tool0 z axis angle:' + str(tool0_z_min_angle)
+        #
+        # # smaller angle
+        # if world_my_min_angle < tool0_z_min_angle:
+        #     better_pos, better_ori = world_my_pos, world_my_ori
+        #     worse_pos, worse_ori = tool0_z_pos, tool0_z_ori
+        #     print 'smaller angle is: world -y axis angle'
+        # else:
+        #     better_pos, better_ori = tool0_z_pos, tool0_z_ori
+        #     worse_pos, worse_ori = world_my_pos, world_my_ori
+        #     print 'smaller angle is: tool0 z axis angle'
+        #
+        # # try better plan first
+        # is_plan_found = False
+        # prepick_pose = autil.get_pose_msg_from_pos_and_ori(better_pos, better_ori)
+        # waypoints = [copy.deepcopy(prepick_pose)]
+        # plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        # if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+        #     print 'better plan found'
+        #     is_plan_found = True
+        #     tutorial.display_trajectory(plan)
+        # else:
+        #     # try worse plan
+        #     prepick_pose = autil.get_pose_msg_from_pos_and_ori(worse_pos, worse_ori)
+        #     waypoints = [copy.deepcopy(prepick_pose)]
+        #     plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        #     if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+        #         print 'worse plan found'
+        #         is_plan_found = True
+        #         tutorial.display_trajectory(plan)
+        #     else:
+        #         print 'no plan found'
+        #
+        # if is_plan_found:
+        #     print 'executing plan'
+        #     tutorial.execute_plan(plan)
+        #
+        # # move to lower position
+        # is_plan_found = False
+        # pick_pose = copy.deepcopy(prepick_pose)
+        # pick_pose.position.z = 0.08
+        # waypoints = [copy.deepcopy(pick_pose)]
+        #
+        # # Create an OrientationConstraint
+        # oc = OrientationConstraint()
+        # oc.link_name = "tool0"
+        # oc.header.frame_id = "world"
+        # oc.orientation = Quaternion(0.0, 0.0, 0.0, 1.0)  # specify the desired orientation here
+        # oc.absolute_x_axis_tolerance = 0.1
+        # oc.absolute_y_axis_tolerance = 0.1
+        # oc.absolute_z_axis_tolerance = 0.1
+        # oc.weight = 1.0
+        # constraints = moveit_commander.Constraints()
+        # constraints.orientation_constraints.append(oc)
+        # tutorial.move_group.set_path_constraints(constraints)
+        #
+        # # plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        #
+        # plan, fraction = tutorial.move_group.plan()
+        # if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+        #     print 'pick plan found'
+        #     is_plan_found = True
+        #     tutorial.display_trajectory(plan)
+        #
+        # if is_plan_found:
+        #     tutorial.execute_plan(plan)
+        #     print 'c'
 
         # cartesian_plan, fraction = tutorial.plan_cartesian_path()
         # tutorial.go_to_joint_state()
         # tutorial.go_to_pose_goal()
 
-
-
-        # print "============ Press `Enter` to execute a movement using a pose goal ..."
         # raw_input()
         # tutorial.go_to_pose_goal()
         #
