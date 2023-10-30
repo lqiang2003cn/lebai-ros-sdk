@@ -209,6 +209,7 @@ def get_min_pose(listener, current_axis, obj_frame):
     m_new_quat = quaternion_from_matrix(m_new)
 
     obj_position = translation_from_matrix(obj_pose_matrix)
+    # obj_position[0] -= 0.02
     prepick_mat = get_matrix_from_pos_and_quat(obj_position, m_new_quat)
 
     # if min_axis == 0:

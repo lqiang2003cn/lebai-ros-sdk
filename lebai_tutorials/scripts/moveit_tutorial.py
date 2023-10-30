@@ -47,7 +47,7 @@ import sys
 import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
-from moveit_msgs.msg import TrajectoryConstraints
+from moveit_msgs.msg import TrajectoryConstraints, Constraints
 import numpy as np
 import rospy
 import tf
@@ -325,7 +325,21 @@ def main():
     try:
         tutorial = MoveGroupPythonIntefaceTutorial()
         tutorial.scene.clear()
+        tutorial.move_group.clear_path_constraints()
+        tutorial.move_group.clear_pose_targets()
         listener = tf.TransformListener()
+
+        # default pose
+
+        default_pos = [-0.10552, -0.2546, 0.32488]
+        default_quat = [-0.0054169, 0.72269, -0.69114, 0.0039104]
+        default_pose = autil.get_pose_msg_from_pos_and_ori(default_pos, default_quat)
+
+        current_pose = tutorial.move_group.get_current_pose().pose
+        if all_close(default_pose, current_pose, 0.01):
+            print 'already in default pose'
+        else:
+            print 'moving to default pose'
 
         # add objects to scene
         desk_pose = geometry_msgs.msg.PoseStamped()
@@ -355,21 +369,45 @@ def main():
         tutorial.scene.attach_box('gripper_base_link', 'gripper_box', touch_links=['gripper_base_link'])
         tutorial.wait_for_state_update('gripper_box', box_is_known=False, box_is_attached=True)
 
-
-
         ###### use only world -y axis ######
-        # aruco_frame = 'aruco_marker_frame'
-        # world_my_pos, world_my_ori, world_my_min_angle = autil.get_min_pose(listener, [0, -1, 0], aruco_frame)
-        # print 'world -y axis angle:' + str(world_my_min_angle)
-        # is_plan_found = False
-        # prepick_pose = autil.get_pose_msg_from_pos_and_ori(world_my_pos, world_my_ori)
-        # waypoints = [copy.deepcopy(prepick_pose)]
-        # plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        # if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
-        #     print 'better plan found'
-        #     is_plan_found = True
-        #     tutorial.display_trajectory(plan)
+        aruco_frame = 'aruco_marker_frame'
+        world_my_pos, world_my_ori, world_my_min_angle = autil.get_min_pose(listener, [0, -1, 0], aruco_frame)
+        print 'world -y axis angle:' + str(world_my_min_angle)
+        prepick_pose = autil.get_pose_msg_from_pos_and_ori(world_my_pos, world_my_ori)
 
+        constraints = Constraints()
+        constraints.name = "upright"
+        orientation_constraint = OrientationConstraint()
+        orientation_constraint.header.frame_id = 'world'
+        orientation_constraint.link_name = tutorial.move_group.get_end_effector_link()
+        orientation_constraint.orientation = current_pose.orientation
+        orientation_constraint.absolute_x_axis_tolerance = 3.14
+        orientation_constraint.absolute_y_axis_tolerance = 0.01
+        orientation_constraint.absolute_z_axis_tolerance = 3.14
+        orientation_constraint.weight = 1
+        constraints.orientation_constraints.append(orientation_constraint)
+        tutorial.move_group.set_path_constraints(constraints)
+        # pose_goal = PoseStamped()
+        # pose_goal.header.frame_id = 'world'
+        # pose_goal.pose = prepick_pose
+        # tutorial.move_group.set_pose_target(pose_goal)
+
+        is_plan_found = False
+        waypoints = [copy.deepcopy(prepick_pose)]
+        plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+            print 'constrained plan found'
+            is_plan_found = True
+            tutorial.display_trajectory(plan)
+
+        if is_plan_found:
+            print 'executing plan'
+            tutorial.execute_plan(plan)
+        print 'c'
+
+        tutorial.move_group.stop()
+        tutorial.move_group.clear_path_constraints()
+        tutorial.move_group.clear_pose_targets()
 
         ########### use both world -y axis and tool0 z axis ############
         # aruco_frame = 'aruco_marker_frame'

@@ -45,4 +45,8 @@
     <arg name="moveit_warehouse_database_path" value="$(arg db_path)"/>
   </include>
 
+  <include file="$(find orbbec_camera)/launch/gemini2.launch">
+  </include>
+
+
 </launch>

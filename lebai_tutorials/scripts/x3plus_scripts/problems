@@ -6,6 +6,7 @@ roslaunch yahboomcar_visual usb_ar_track.launch
 rosrun tf static_transform_publisher x, y, z, yaw(rotate z), pitch(rotate y), roll(rotate x) mono_link ml 100
 rosrun tf static_transform_publisher 0, 0, 0, -1.57, 0, 0 mono_link yaw_mono_link 100
 rosrun tf tf_echo base_footprint ar_marker_101
+rosrun tf tf
 
 
 
