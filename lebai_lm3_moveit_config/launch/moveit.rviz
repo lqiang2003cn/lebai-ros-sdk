@@ -391,11 +391,10 @@ Visualization Manager:
                               gripper_r_link_finger:
                                 {}
           camera_link:
-            aruco_marker_frame:
-              {}
             camera_color_frame:
               camera_color_optical_frame:
-                {}
+                aruco_marker_frame:
+                  {}
             camera_depth_frame:
               camera_depth_optical_frame:
                 {}

@@ -1,3 +1,4 @@
+import copy
 import math
 
 import numpy as np
@@ -181,18 +182,18 @@ def get_object_above_pose(listener, obj_pose_matrix, prepick_diff):
     return prepick_mat
 
 
-def get_min_pose(listener, current_axis, obj_frame):
+def get_min_pose(listener, reference_axis, obj_frame):
     obj_pose_matrix = query_pose_as_matrix(listener, 'world', obj_frame)
     min_axis = -1
     min_abs_angle = np.inf
     min_direction = None
     for i in range(2):  # assuming z up
         axis = obj_pose_matrix[0:3, i]
-        angle = abs_angle_between(current_axis, axis)
+        angle = abs_angle_between(reference_axis, axis)
         if angle < min_abs_angle:
             min_axis = i
             min_abs_angle = angle
-            front_angle = angle_between(current_axis, axis)
+            front_angle = angle_between(reference_axis, axis)
             if front_angle <= math.pi / 2:
                 min_direction = 1
             else:
@@ -212,28 +213,32 @@ def get_min_pose(listener, current_axis, obj_frame):
     # obj_position[0] -= 0.02
     prepick_mat = get_matrix_from_pos_and_quat(obj_position, m_new_quat)
 
-    # if min_axis == 0:
-    #     if min_direction == 1:
-    #         obj_position[0] += - 0.18
-    #     elif min_direction == -1:
-    #         obj_position[0] += 0.18
-    #     else:
-    #         raise Exception('unknown min_direction')
-    # elif min_axis == 1:
-    #     if min_direction == 1:
-    #         obj_position[1] += - 0.18
-    #     elif min_direction == -1:
-    #         obj_position[1] += 0.18
-    #     else:
-    #         raise Exception('unknown min_direction')
-
     obj_pos_diff = [0, -0.1, -0.18]
-    # obj_pos_diff[min_axis] = -min_direction * 0.18
     prepick_transform_mat = get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
     prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
-
     prepick_pos, prepick_ori = get_pos_and_quat_from_matrix(prepick_mat)
     return prepick_pos, prepick_ori, min_abs_angle
+
+
+def get_circle_pose(listener, obj_frame):
+    obj_pos, obj_quat = query_pose(listener, 'world', obj_frame)
+    obj_pos_zero_z = copy.deepcopy(obj_pos)
+    obj_pos_zero_z[2] = 0
+    m_new = np.eye(4, 4)
+    # y axis
+    m_new[0:3, 1] = [0, 0, -1]
+    # z axis
+    m_new[0:3, 2] = unit_vector(obj_pos_zero_z)
+    # x axis
+    m_new[0:3, 0] = np.cross(m_new[0:3, 1], m_new[0:3, 2])
+    prepick_quat = quaternion_from_matrix(m_new)
+
+    prepick_mat = get_matrix_from_pos_and_quat(obj_pos, prepick_quat)
+    obj_pos_diff = [0, -0.1, -0.18]
+    prepick_transform_mat = get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
+    prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
+    prepick_pos, prepick_ori = get_pos_and_quat_from_matrix(prepick_mat)
+    return prepick_pos, prepick_ori
 
 
 def get_pose_msg_from_pos_and_ori(pos, ori):

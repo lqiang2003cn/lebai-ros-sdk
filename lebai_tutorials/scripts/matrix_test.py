@@ -5,8 +5,8 @@ import arm_utils as autils
 # 0.61025; -0.60255; 0.37153; 0.35567
 # 0.19399; 0.10482; 0.70268
 # 0.60588; -0.60057; 0.36725; 0.37062
-color_optical_to_aruco_pos = [0.105, 0.099, 0.624]
-color_optical_to_aruco_ori = [0.652, -0.557, 0.344, 0.382]
+color_optical_to_aruco_pos = [0.087, 0.016, 0.609]
+color_optical_to_aruco_ori = [0.728, -0.555, 0.278, 0.291]
 marker_in_optical = autils.get_matrix_from_pos_and_quat(color_optical_to_aruco_pos, color_optical_to_aruco_ori)
 box_in_world = np.eye(4)
 box_in_world[0:3, 0] = [-1, 0, 0]
@@ -14,7 +14,7 @@ box_in_world[0:3, 1] = [0, -1, 0]
 box_in_world[0:3, 2] = [0, 0, 1]
 # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
 # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
-box_in_world[0:3, 3] = [0.035, -0.1148 - 0.16, 0.03]
+box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
 color_optical_in_world = np.matmul(box_in_world, np.linalg.inv(marker_in_optical))
 
 print np.concatenate([translation_from_matrix(color_optical_in_world), quaternion_from_matrix(color_optical_in_world)])
