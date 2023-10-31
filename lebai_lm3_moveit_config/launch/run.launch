@@ -51,5 +51,8 @@
   <include file="$(find lebai_lm3_moveit_config)/launch/marker_publisher.launch">
   </include>
 
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+  </include>
+
 
 </launch>

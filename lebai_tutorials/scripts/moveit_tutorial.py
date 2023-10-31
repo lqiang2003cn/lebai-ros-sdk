@@ -129,6 +129,8 @@ class MoveGroupPythonIntefaceTutorial(object):
         while self.aruco_list is None:
             rospy.sleep(0.5)  # waiting for aruco detector
 
+
+
         payload = {}
 
 
