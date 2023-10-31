@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 # Software License Agreement (BSD License)
 #
@@ -44,6 +45,7 @@
 import copy
 import sys
 
+from aruco_msgs.msg import MarkerArray
 import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
@@ -116,6 +118,21 @@ class MoveGroupPythonIntefaceTutorial(object):
         self.planning_frame = planning_frame
         self.eef_link = eef_link
         self.group_names = group_names
+        self.aruco_list = None
+        self.aruco_mapping = {
+            '200': '咖啡',
+            '204': '矿泉水',
+            '206': '牛奶',
+        }
+
+    def create_payload_json(self):
+        while self.aruco_list is None:
+            rospy.sleep(0.5)  # waiting for aruco detector
+
+        payload = {}
+
+
+
 
     def go_to_joint_state(self):
         move_group = self.move_group
@@ -320,12 +337,16 @@ class MoveGroupPythonIntefaceTutorial(object):
         # We wait for the planning scene to update.
         return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout)
 
+    def aruco_call_back(self, marker_array):
+        self.aruco_list = marker_array.markers
+
 
 #############################################################################
 # the easy situation: a circle, just an angle with the world -y-axis
 def main():
     tutorial = MoveGroupPythonIntefaceTutorial()
     tutorial.scene.clear()
+    rospy.Subscriber("/aruco_marker_publisher/markers", MarkerArray, tutorial.aruco_call_back)
     tutorial.move_group.clear_path_constraints()
     tutorial.move_group.clear_pose_targets()
     listener = tf.TransformListener()
@@ -386,18 +407,15 @@ def main():
 
     if is_plan_found:
         print 'executing plan'
-        tutorial.execute_plan(plan)
+        # tutorial.execute_plan(plan)
     print 'c'
 
     tutorial.move_group.stop()
     tutorial.move_group.clear_path_constraints()
     tutorial.move_group.clear_pose_targets()
+
+
 #############################################################################
-
-
-
-
-
 
 
 #############################################################################
