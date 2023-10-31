@@ -6,7 +6,8 @@ from sensor_msgs.msg import JointState
 
 def callback(data):
     rospy.loginfo("Joint pose: %s", data.position)
-    
+
+
 def Run():
     rospy.Subscriber("/joint_states", JointState, callback)
     rospy.spin()
