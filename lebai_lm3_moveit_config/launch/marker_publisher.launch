@@ -5,12 +5,12 @@
         <remap from="/image" to="/camera/color/image_raw" />
         <param name="image_is_rectified" value="True"/>
         <param name="marker_size"        value="0.04"/>
-        <param name="reference_frame"    value="camera_color_optical_frame"/>
+        <param name="reference_frame"    value="world"/>
         <param name="camera_frame"       value="camera_color_optical_frame"/>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="camera_to_world" args="0.63245197 -0.31429028  0.41463575 -0.3286969  -0.10044075  0.92938962
- -0.13455459 world camera_link 10" />
+    <node pkg="tf" type="static_transform_publisher" name="camera_to_world" args="-0.3451959  -0.5019588   0.72737837  0.4343285   0.50681694 -0.28849337
+  0.68648884 world camera_link 10" />
 
 </launch>
 

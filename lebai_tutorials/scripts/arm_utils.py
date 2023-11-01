@@ -241,6 +241,27 @@ def get_circle_pose(listener, obj_frame):
     return prepick_pos, prepick_ori
 
 
+def get_circle_pose_by_pose_msg(pose_msg):
+    obj_pos, obj_quat = get_pos_and_ori_from_pose_msg(pose_msg)
+    obj_pos_zero_z = copy.deepcopy(obj_pos)
+    obj_pos_zero_z[2] = 0
+    m_new = np.eye(4, 4)
+    # y axis
+    m_new[0:3, 1] = [0, 0, -1]
+    # z axis
+    m_new[0:3, 2] = unit_vector(obj_pos_zero_z)
+    # x axis
+    m_new[0:3, 0] = np.cross(m_new[0:3, 1], m_new[0:3, 2])
+    prepick_quat = quaternion_from_matrix(m_new)
+
+    prepick_mat = get_matrix_from_pos_and_quat(obj_pos, prepick_quat)
+    obj_pos_diff = [0, -0.1, -0.18]
+    prepick_transform_mat = get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
+    prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
+    prepick_pos, prepick_ori = get_pos_and_quat_from_matrix(prepick_mat)
+    return prepick_pos, prepick_ori
+
+
 def get_pose_msg_from_pos_and_ori(pos, ori):
     pose = Pose()
     pose.position.x = pos[0]
@@ -251,3 +272,9 @@ def get_pose_msg_from_pos_and_ori(pos, ori):
     pose.orientation.z = ori[2]
     pose.orientation.w = ori[3]
     return pose
+
+
+def get_pos_and_ori_from_pose_msg(pose_msg):
+    pos = [pose_msg.position.x, pose_msg.position.y, pose_msg.position.z]
+    ori = [pose_msg.orientation.x, pose_msg.orientation.y, pose_msg.orientation.z, pose_msg.orientation.w]
+    return np.array(pos), np.array(ori)

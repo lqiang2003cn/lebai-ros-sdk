@@ -1,30 +1,65 @@
 import numpy as np
+import rospy
+import tf
 from tf.transformations import quaternion_from_matrix, quaternion_matrix, euler_from_quaternion, translation_from_matrix
 import arm_utils as autils
+import aruco_msgs.msg as am
+
 
 # 0.61025; -0.60255; 0.37153; 0.35567
 # 0.19399; 0.10482; 0.70268
 # 0.60588; -0.60057; 0.36725; 0.37062
-color_optical_to_aruco_pos = [0.177, -0.046, 0.682]
-color_optical_to_aruco_ori = [0.747, -0.512, 0.281, 0.318]
-marker_in_optical = autils.get_matrix_from_pos_and_quat(color_optical_to_aruco_pos, color_optical_to_aruco_ori)
-box_in_world = np.eye(4)
-box_in_world[0:3, 0] = [-1, 0, 0]
-box_in_world[0:3, 1] = [0, -1, 0]
-box_in_world[0:3, 2] = [0, 0, 1]
-# box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
-# box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
-box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
-color_optical_in_world = np.matmul(box_in_world, np.linalg.inv(marker_in_optical))
 
-print np.concatenate([translation_from_matrix(color_optical_in_world), quaternion_from_matrix(color_optical_in_world)])
+def markers_callback(data):
+    marker_pose = data.markers[0].pose.pose
+    m_pos = marker_pose.position
+    m_quat = marker_pose.orientation
+    color_optical_to_aruco_pos = [m_pos.x, m_pos.y, m_pos.z]
+    color_optical_to_aruco_ori = [m_quat.x, m_quat.y, m_quat.z, m_quat.w]
+    marker_in_optical = autils.get_matrix_from_pos_and_quat(color_optical_to_aruco_pos, color_optical_to_aruco_ori)
+    box_in_world = np.eye(4)
+    box_in_world[0:3, 0] = [-1, 0, 0]
+    box_in_world[0:3, 1] = [0, -1, 0]
+    box_in_world[0:3, 2] = [0, 0, 1]
+    # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
+    # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
+    box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
+    color_optical_in_world = np.matmul(box_in_world, np.linalg.inv(marker_in_optical))
 
-optical_to_camera_pos = [-0.014, 0.000, -0.002]
-optical_to_camera_quat = [0.501, -0.500, 0.498, 0.501]
-optical_to_camera_matrix = autils.get_matrix_from_pos_and_quat(optical_to_camera_pos, optical_to_camera_quat)
+    # print np.concatenate([translation_from_matrix(color_optical_in_world), quaternion_from_matrix(color_optical_in_world)])
 
-camera_in_world = np.matmul(color_optical_in_world, optical_to_camera_matrix)
-print np.concatenate([translation_from_matrix(camera_in_world), quaternion_from_matrix(camera_in_world)])
+    optical_to_camera_pos = [-0.014, 0.000, -0.002]
+    optical_to_camera_quat = [0.501, -0.500, 0.498, 0.501]
+    optical_to_camera_matrix = autils.get_matrix_from_pos_and_quat(optical_to_camera_pos, optical_to_camera_quat)
+
+    camera_in_world = np.matmul(color_optical_in_world, optical_to_camera_matrix)
+    print np.concatenate([translation_from_matrix(camera_in_world), quaternion_from_matrix(camera_in_world)])
+
+
+if __name__ == "__main__":
+    rospy.init_node('get_camera_frame')
+    listener = tf.TransformListener()
+    marker_in_optical = autils.query_pose(listener, 'camera_color_optical_frame', 'aruco_marker_frame')
+    color_optical_to_aruco_pos = marker_in_optical[0]
+    color_optical_to_aruco_ori = marker_in_optical[1]
+    marker_in_optical = autils.get_matrix_from_pos_and_quat(color_optical_to_aruco_pos, color_optical_to_aruco_ori)
+    box_in_world = np.eye(4)
+    box_in_world[0:3, 0] = [-1, 0, 0]
+    box_in_world[0:3, 1] = [0, -1, 0]
+    box_in_world[0:3, 2] = [0, 0, 1]
+    # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
+    # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
+    box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
+    color_optical_in_world = np.matmul(box_in_world, np.linalg.inv(marker_in_optical))
+    # optical_to_camera_pos = autils.query_pose(listener, 'camera_color_optical_frame', 'camera_link')
+    optical_to_camera_pos = [-0.014, 0.000, -0.002]
+    optical_to_camera_quat = [0.501, -0.500, 0.498, 0.501]
+    optical_to_camera_matrix = autils.get_matrix_from_pos_and_quat(optical_to_camera_pos, optical_to_camera_quat)
+    camera_in_world = np.matmul(color_optical_in_world, optical_to_camera_matrix)
+    print np.concatenate([translation_from_matrix(camera_in_world), quaternion_from_matrix(camera_in_world)])
+
+
+    print 'c'
 
 # camera_link_to_color_optical_pos = [0.002, -0.014, -0.000]
 # camera_link_to_color_optical_quat = [-0.501, 0.500, -0.498, 0.501]
