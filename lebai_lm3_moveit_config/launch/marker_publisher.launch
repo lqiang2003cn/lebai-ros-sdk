@@ -9,8 +9,8 @@
         <param name="camera_frame"       value="camera_color_optical_frame"/>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="camera_to_world" args="-0.3451959  -0.5019588   0.72737837  0.4343285   0.50681694 -0.28849337
-  0.68648884 world camera_link 10" />
+    <node pkg="tf" type="static_transform_publisher" name="camera_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
+  0.71713206 world camera_link 10" />
 
 </launch>
 

@@ -49,7 +49,10 @@ if __name__ == "__main__":
     box_in_world[0:3, 2] = [0, 0, 1]
     # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
     # box_in_world[0:3, 3] = [-0.0315, -0.1148, 0.03]
-    box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
+    # box_in_world[0:3, 3] = [0.035, -0.2748, 0.03]
+    # box_in_world[0:3, 3] = [0.035 - 0.068 * 3, -0.2748, 0.03]
+    # box_in_world[0:3, 3] = [0.035 - 0.068 * 3, -0.2748, 0.03]
+    box_in_world[0:3, 3] = [0.0 + 0.068 * 4 + 0.03, -0.2348 - 0.08 * 2 - 0.03,  0.105]
     color_optical_in_world = np.matmul(box_in_world, np.linalg.inv(marker_in_optical))
     # optical_to_camera_pos = autils.query_pose(listener, 'camera_color_optical_frame', 'camera_link')
     optical_to_camera_pos = [-0.014, 0.000, -0.002]

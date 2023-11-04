@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # coding=utf-8
+
 import copy
 import json
 import sys
@@ -7,11 +8,14 @@ import sys
 import geometry_msgs.msg as gm
 import moveit_commander
 import moveit_msgs.msg as mm
+import numpy as np
 import rospy
 from aruco_msgs.msg import MarkerArray
 from lebai_tutorials.srv import JsonInfo
 from moveit_msgs.msg import Constraints, OrientationConstraint
 import arm_utils as autil
+from lebai_msgs.srv import SetGripper
+
 
 class RosBridgeServices:
 
@@ -60,16 +64,9 @@ class RosBridgeServices:
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
 
-    def go_to_joint_state(self):
+    def change_joint0(self, joint0_val):
         joint_goal = self.move_group.get_current_joint_values()
-        joint_goal[0] -= 0.3
-        p = self.move_group.plan(joint_goal)
-        self.display_trajectory(p)
-        self.execute_plan(p)
-        self.move_group.stop()
-
-        joint_goal = self.move_group.get_current_joint_values()
-        joint_goal[5] += 0.6
+        joint_goal[0] = joint0_val
         p = self.move_group.plan(joint_goal)
         self.display_trajectory(p)
         self.execute_plan(p)
@@ -169,24 +166,19 @@ class RosBridgeServices:
             while self.aruco_list is None:
                 rospy.sleep(0.5)  # waiting for aruco detector
 
-            # move to item's top position
             aruco_list = copy.deepcopy(self.aruco_list)
-
             item_pose_in_world = None
             for a in aruco_list:
                 if a.id == item_id:
                     item_pose_in_world = a.pose.pose
-
             if item_pose_in_world is None:
                 return {'status': 'wrong_item'}
 
-            # move to item's top
-            # ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            # self.move_group.set_path_constraints(ori_con)
-
+            # move to item's top position
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
             prepick_pos, prepick_quat = autil.get_circle_pose_by_pose_msg(item_pose_in_world)
             prepick_pose = autil.get_pose_msg_from_pos_and_ori(prepick_pos, prepick_quat)
-
             is_plan_found = False
             waypoints = [copy.deepcopy(prepick_pose)]
             plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
@@ -194,15 +186,139 @@ class RosBridgeServices:
                 print 'constrained plan found'
                 is_plan_found = True
                 self.display_trajectory(plan)
-
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            print 'c'
-
             self.move_group.stop()
             self.move_group.clear_path_constraints()
             self.move_group.clear_pose_targets()
+
+            # move to item's front position
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
+            current_pose = self.move_group.get_current_pose().pose
+            pick_pose = copy.deepcopy(current_pose)
+            pick_pose.position.z = 0.12
+            is_plan_found = False
+            waypoints = [copy.deepcopy(pick_pose)]
+            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+                print 'constrained plan found'
+                is_plan_found = True
+                self.display_trajectory(plan)
+            if is_plan_found:
+                print 'executing plan'
+                self.execute_plan(plan)
+            self.move_group.stop()
+            self.move_group.clear_path_constraints()
+            self.move_group.clear_pose_targets()
+
+            # move to item's pick position
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
+            current_pose = self.move_group.get_current_pose().pose
+            prepick_mat = autil.get_matrix_from_pose_msg(current_pose)
+            obj_pos_diff = [0, 0, 0.1]
+            prepick_transform_mat = autil.get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
+            prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
+            prepick_pose = autil.get_pose_msg_from_matrix(prepick_mat)
+            is_plan_found = False
+            waypoints = [copy.deepcopy(prepick_pose)]
+            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+                print 'constrained plan found'
+                is_plan_found = True
+                self.display_trajectory(plan)
+            if is_plan_found:
+                print 'executing plan'
+                self.execute_plan(plan)
+            self.move_group.stop()
+            self.move_group.clear_path_constraints()
+            self.move_group.clear_pose_targets()
+
+            # close gripper
+            rospy.wait_for_service('/io_service/set_gripper_position')
+            try:
+                gripper_force_controller = rospy.ServiceProxy('/io_service/set_gripper_force', SetGripper)
+                gripper_pos_controller = rospy.ServiceProxy('/io_service/set_gripper_position', SetGripper)
+                print gripper_force_controller.call(5)
+                print gripper_pos_controller.call(0.0)
+            except rospy.ServiceException as e:
+                print("Service call failed: %s" % e)
+
+            # move to top again
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
+            prepick_pos, prepick_quat = autil.get_circle_pose_by_pose_msg(item_pose_in_world)
+            prepick_pose = autil.get_pose_msg_from_pos_and_ori(prepick_pos, prepick_quat)
+            is_plan_found = False
+            waypoints = [copy.deepcopy(prepick_pose)]
+            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+                print 'constrained plan found'
+                is_plan_found = True
+                self.display_trajectory(plan)
+            if is_plan_found:
+                print 'executing plan'
+                self.execute_plan(plan)
+            self.move_group.stop()
+            self.move_group.clear_path_constraints()
+            self.move_group.clear_pose_targets()
+
+            # move to output area: for now, fixed
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
+            # fixed position
+            current_pose = self.move_group.get_current_pose().pose
+            prepick_pose = copy.deepcopy(current_pose)
+            prepick_pose.position.x = -0.094
+            prepick_pose.position.y = -0.358
+            prepick_pose.orientation.x = 0.042
+            prepick_pose.orientation.y = 0.718
+            prepick_pose.orientation.z = -0.692
+            prepick_pose.orientation.w = -0.057
+            waypoints = [prepick_pose]
+            is_plan_found = False
+            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+                print 'constrained plan found'
+                is_plan_found = True
+                self.display_trajectory(plan)
+            if is_plan_found:
+                print 'executing plan'
+                self.execute_plan(plan)
+            else:
+                return json.dumps({"status": "plan failed"})
+            self.move_group.stop()
+            self.move_group.clear_path_constraints()
+            self.move_group.clear_pose_targets()
+
+            # move to place on table
+            ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
+            self.move_group.set_path_constraints(ori_con)
+            current_pose = self.move_group.get_current_pose().pose
+            pick_pose = copy.deepcopy(current_pose)
+            pick_pose.position.z -= 0.08
+            is_plan_found = False
+            waypoints = [copy.deepcopy(pick_pose)]
+            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
+                print 'constrained plan found'
+                is_plan_found = True
+                self.display_trajectory(plan)
+            if is_plan_found:
+                print 'executing plan'
+                self.execute_plan(plan)
+            self.move_group.stop()
+            self.move_group.clear_path_constraints()
+            self.move_group.clear_pose_targets()
+
+            # open gripper
+            gripper_force_controller = rospy.ServiceProxy('/io_service/set_gripper_force', SetGripper)
+            gripper_pos_controller = rospy.ServiceProxy('/io_service/set_gripper_position', SetGripper)
+            print gripper_force_controller.call(5)
+            print gripper_pos_controller.call(100.0)
+
             res = {'status': 'ok'}
             return json.dumps(res)
         except rospy.ServiceException, e:

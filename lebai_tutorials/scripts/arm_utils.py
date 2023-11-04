@@ -41,6 +41,14 @@ def get_matrix_from_pos_and_quat(pos, quat):
     return p_mat
 
 
+def get_matrix_from_pose_msg(pose_msg):
+    pos, quat = get_pos_and_ori_from_pose_msg(pose_msg)
+    t_mat = translation_matrix(pos)
+    q_mat = quaternion_matrix(quat)
+    p_mat = np.dot(t_mat, q_mat)
+    return p_mat
+
+
 def query_pose(tf_listener, target_frame, source_frame):
     tf_listener.clear()
     pos, rot = None, None
@@ -255,7 +263,7 @@ def get_circle_pose_by_pose_msg(pose_msg):
     prepick_quat = quaternion_from_matrix(m_new)
 
     prepick_mat = get_matrix_from_pos_and_quat(obj_pos, prepick_quat)
-    obj_pos_diff = [0, -0.1, -0.18]
+    obj_pos_diff = [0, -0.1, -0.25]
     prepick_transform_mat = get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
     prepick_mat = np.matmul(prepick_mat, prepick_transform_mat)
     prepick_pos, prepick_ori = get_pos_and_quat_from_matrix(prepick_mat)
@@ -271,6 +279,12 @@ def get_pose_msg_from_pos_and_ori(pos, ori):
     pose.orientation.y = ori[1]
     pose.orientation.z = ori[2]
     pose.orientation.w = ori[3]
+    return pose
+
+
+def get_pose_msg_from_matrix(matrix):
+    pos, quat = get_pos_and_quat_from_matrix(matrix)
+    pose = get_pose_msg_from_pos_and_ori(pos, quat)
     return pose
 
 

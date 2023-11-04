@@ -6,6 +6,9 @@ roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
 roslaunch lebai_lm3_moveit_config run.launch sim:=true
 
+# adjust camera
+roslaunch lebai_lm3_moveit_config gemini2_adjust_camera.launch
+
 # launch bridge
 roslaunch rosbridge_server rosbridge_websocket.launch
 

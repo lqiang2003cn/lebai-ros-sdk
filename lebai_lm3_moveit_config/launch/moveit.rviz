@@ -309,8 +309,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        aruco_marker_frame:
-          Value: true
         base:
           Value: false
         base_link:
@@ -393,8 +391,7 @@ Visualization Manager:
           camera_link:
             camera_color_frame:
               camera_color_optical_frame:
-                aruco_marker_frame:
-                  {}
+                {}
             camera_depth_frame:
               camera_depth_optical_frame:
                 {}

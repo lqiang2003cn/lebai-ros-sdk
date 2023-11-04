@@ -16,31 +16,54 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-  FILES
-  # ExecuteMode.msg
-  IOStatus.msg 
-  GripperStatus.msg 
-  IOConditionalExpress.msg
-  UntilInfo.msg  
-  MoveCommon.msg
-  #MoveLine.msg
-  #MoveJoint.msg  
-  #MoveCircle.msg
+        FILES
+        # ExecuteMode.msg
+        IOStatus.msg
+        GripperStatus.msg
+        IOConditionalExpress.msg
+        UntilInfo.msg
+        MoveCommon.msg
+        #MoveLine.msg
+        #MoveJoint.msg
+        #MoveCircle.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
-  FILES
-  SetDO.srv
-  SetAO.srv
-  SetAMode.srv
-  MoveJoint.srv
-  MoveLine.srv
-  MoveCircle.srv
-  SpeedJoint.srv
-  SpeedLine.srv
-  SetGripper.srv
+        FILES
+        SetDO.srv
+        SetAO.srv
+        SetAMode.srv
+        MoveJoint.srv
+        MoveLine.srv
+        MoveCircle.srv
+        SpeedJoint.srv
+        SpeedLine.srv
+        SetGripper.srv
 )
+
+generate_messages(
+        DEPENDENCIES
+        industrial_msgs
+        trajectory_msgs
+        std_msgs
+        geometry_msgs
+)
+
+catkin_package(
+        #  INCLUDE_DIRS include
+        #  LIBRARIES lebai_msgs
+        CATKIN_DEPENDS industrial_msgs std_msgs trajectory_msgs
+        #  DEPENDS system_lib
+)
+
+include_directories(
+        ${catkin_INCLUDE_DIRS}
+)
+
+
+
+
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -50,20 +73,9 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  industrial_msgs
-  trajectory_msgs
-  std_msgs
-  geometry_msgs
-)
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES lebai_msgs
-  CATKIN_DEPENDS industrial_msgs std_msgs trajectory_msgs
-#  DEPENDS system_lib
-)
+
+
 
 ###########
 ## Build ##
@@ -72,7 +84,5 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+
 
