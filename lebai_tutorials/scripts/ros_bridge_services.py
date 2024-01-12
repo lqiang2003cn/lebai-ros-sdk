@@ -11,10 +11,16 @@ import moveit_msgs.msg as mm
 import numpy as np
 import rospy
 from aruco_msgs.msg import MarkerArray
+from geometry_msgs.msg import TransformStamped
+from tf2_ros import StaticTransformBroadcaster
+
 from lebai_tutorials.srv import JsonInfo
 from moveit_msgs.msg import Constraints, OrientationConstraint
 import arm_utils as autil
 from lebai_msgs.srv import SetGripper
+
+from tf.transformations import translation_matrix, quaternion_matrix, euler_from_quaternion, translation_from_matrix, \
+    quaternion_from_matrix, quaternion_from_euler
 
 
 class RosBridgeServices:
@@ -95,6 +101,8 @@ class RosBridgeServices:
         desk_pose.pose.orientation.w = 1.0
         desk_pose.pose.position.z = -0.1
         self.scene.add_box("desk", desk_pose, size=(1.4, 1.4, 0.25))
+        self.scene.add_sphere('s', desk_pose, radius=0.075 / 2)
+        print(self.move_group.get_end_effector_link())
         self.wait_for_state_update('desk', box_is_known=True, box_is_attached=False)
 
         link6_box_pose = gm.PoseStamped()
@@ -323,6 +331,25 @@ class RosBridgeServices:
             return json.dumps(res)
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
+
+
+    def make_transforms(self, parent_frame_id, child_frame_id, transform_pose, rate):
+        static_transformStamped = TransformStamped()
+        static_transformStamped.header.stamp = rospy.Time(0)
+        static_transformStamped.header.frame_id = parent_frame_id
+        static_transformStamped.child_frame_id = child_frame_id
+        static_transformStamped.transform.translation.x = transform_pose.position.x
+        static_transformStamped.transform.translation.y = transform_pose.position.y
+        static_transformStamped.transform.translation.z = transform_pose.position.z
+        static_transformStamped.transform.rotation.x = transform_pose.orientation[0]
+        static_transformStamped.transform.rotation.y = transform_pose.orientation[1]
+        static_transformStamped.transform.rotation.z = transform_pose.orientation[2]
+        static_transformStamped.transform.rotation.w = transform_pose.orientation[3]
+        rate = rospy.Rate(10)
+        tf_publisher = StaticTransformBroadcaster()
+        while True:
+            tf_publisher.sendTransform(static_transformStamped)
+            rate.sleep()
 
 
 if __name__ == "__main__":

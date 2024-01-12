@@ -56,7 +56,7 @@ import tf
 from geometry_msgs.msg import PoseStamped, Pose
 from moveit_commander.conversions import pose_to_list
 from tf import broadcaster
-from tf.transformations import quaternion_matrix, quaternion_from_matrix
+from tf.transformations import quaternion_matrix, quaternion_from_matrix, euler_from_quaternion
 
 import arm_utils as autil
 from moveit_msgs.msg import OrientationConstraint
@@ -146,14 +146,10 @@ class MoveGroupPythonIntefaceTutorial(object):
 
 
 
-    def go_to_joint_state(self):
-        move_group = self.move_group
-        joint_goal = move_group.get_current_joint_values()
-        joint_goal[0] += 0.1
-        p = move_group.plan(joint_goal)
+    def go_to_joint_state(self, js):
+        p = self.move_group.plan(js)
         self.display_trajectory(p)
         self.execute_plan(p)
-        move_group.stop()
 
     def go_to_pose_goal(self):
         move_group = self.move_group
@@ -282,6 +278,8 @@ class MoveGroupPythonIntefaceTutorial(object):
         move_group.execute(plan, wait=True)
         move_group.stop()
         move_group.clear_pose_targets()
+        move_group.clear_path_constraints()
+        # move_group.clear_trajectory_constraints()
 
     def wait_for_state_update(self, box_name, box_is_known=False, box_is_attached=False, timeout=100000000):
         scene = self.scene
@@ -356,15 +354,17 @@ class MoveGroupPythonIntefaceTutorial(object):
 #############################################################################
 # the easy situation: a circle, just an angle with the world -y-axis
 def main():
+    # test pose
+    # 1.569933462601711, -1.4379152410443028, 1.9709735648345632, -0.4999818630514762, 1.569933462601711, 3.1399627990026646
     tutorial = MoveGroupPythonIntefaceTutorial()
     tutorial.scene.clear()
-    rospy.Subscriber("/aruco_marker_publisher/markers", MarkerArray, tutorial.aruco_call_back)
     tutorial.move_group.clear_path_constraints()
     tutorial.move_group.clear_pose_targets()
     listener = tf.TransformListener()
     current_pose = tutorial.move_group.get_current_pose().pose
 
     # add objects to scene
+    rospy.sleep(2)
     desk_pose = geometry_msgs.msg.PoseStamped()
     desk_pose.header.frame_id = "world"
     desk_pose.pose.orientation.w = 1.0
@@ -392,9 +392,6 @@ def main():
     tutorial.scene.attach_box('gripper_base_link', 'gripper_box', touch_links=['gripper_base_link'])
     tutorial.wait_for_state_update('gripper_box', box_is_known=False, box_is_attached=True)
 
-    aruco_frame = 'aruco_marker_frame'
-    aruco_in_world_pos, aruco_in_world_quat = autil.get_circle_pose(listener, aruco_frame)
-    prepick_pose = autil.get_pose_msg_from_pos_and_ori(aruco_in_world_pos, aruco_in_world_quat)
 
     constraints = Constraints()
     constraints.name = "upright"
@@ -410,21 +407,30 @@ def main():
     tutorial.move_group.set_path_constraints(constraints)
 
     is_plan_found = False
-    waypoints = [copy.deepcopy(prepick_pose)]
-    plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+    curr_pose = copy.deepcopy(tutorial.move_group.get_current_pose().pose)
+    curr_pose.position.z += 0.05
+
+    # curr_pose.position.y -= 0.3
+    waypoints = [curr_pose]
+    plan, fraction = tutorial.move_group.compute_cartesian_path(waypoints, 0.01, 5)
     if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
         print 'constrained plan found'
         is_plan_found = True
-        tutorial.display_trajectory(plan)
+        # tutorial.display_trajectory(plan)
 
     if is_plan_found:
         print 'executing plan'
         # tutorial.execute_plan(plan)
+    else:
+        print 'plan not found'
     print 'c'
 
     tutorial.move_group.stop()
     tutorial.move_group.clear_path_constraints()
     tutorial.move_group.clear_pose_targets()
+
+    # go back to original
+    # tutorial.go_to_joint_state([1.569933462601711, -1.4379152410443028, 1.9709735648345632, -0.4999818630514762, 1.569933462601711, 3.1399627990026646])
 
 
 #############################################################################

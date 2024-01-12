@@ -1,10 +1,13 @@
 # lebai control: only control
 roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
 
-# lebai moveit: control with moveit
-roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252
+# lebai moveit: control with moveit and run cameras
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
 roslaunch lebai_lm3_moveit_config run.launch sim:=true
+
+# lebai moveit: only with moveit
+roslaunch lebai_lm3_moveit_config run_only_moveit.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
 
 # adjust camera
 roslaunch lebai_lm3_moveit_config gemini2_adjust_camera.launch
