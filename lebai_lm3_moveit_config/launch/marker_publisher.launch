@@ -9,11 +9,11 @@
         <param name="camera_frame" value="camera_color_optical_frame"/>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="camera_01_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
-  0.71713206 world ob_camera_01_link 10"/>
+    <node pkg="tf" type="static_transform_publisher" name="camera_01_to_world"
+          args="0.50033641 -0.63821168  0.38514528 -0.14800998  0.01318743  0.97093654 0.18762029 world ob_camera_01_link 10"/>
 
-    <node pkg="tf" type="static_transform_publisher" name="camera_02_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
-  0.71713206 world ob_camera_02_link 10"/>
+    <node pkg="tf" type="static_transform_publisher" name="camera_02_to_world"
+          args="-0.52288035 -0.24032031  0.4167109   0.0088409   0.18369148 -0.1141961 0.97628814 world ob_camera_02_link 10"/>
 
 </launch>
 

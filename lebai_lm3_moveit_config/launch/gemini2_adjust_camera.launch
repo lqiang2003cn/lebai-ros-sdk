@@ -2,8 +2,9 @@
     <arg name="camera_name" default="camera"/>
     <arg name="output" default="screen"/>
     <arg name="depth_registration" default="true"/>
-    <arg name="serial_number" default="AY3N430001D"/>
-    <arg name="usb_port" default="USB3.0"/>
+<!--    <arg name="serial_number" default="AY3N430001D"/>-->
+    <arg name="serial_number" default="AY3N430008K"/>
+    <arg name="usb_port" default="4-1-2"/>
     <arg name="device_num" default="1"/>
     <arg name="vendor_id" default="0x2bc5"/>
     <arg name="product_id" default="0x0670"/>

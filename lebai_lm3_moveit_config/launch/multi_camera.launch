@@ -1,6 +1,7 @@
 <launch>
     <arg name="camera_name" default="ob_camera"/>
     <arg name="3d_sensor" default="gemini2_only_camera"/>
+
     <arg name="camera1_prefix" default="01"/>
     <arg name="camera1_usb_port" default="4-1-2"/>
     <arg name="camera1_serial_number" default="AY3N430008K"/>
