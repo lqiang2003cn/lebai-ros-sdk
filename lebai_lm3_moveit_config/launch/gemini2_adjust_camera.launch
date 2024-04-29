@@ -3,6 +3,7 @@
     <arg name="output" default="screen"/>
     <arg name="depth_registration" default="true"/>
 <!--    <arg name="serial_number" default="AY3N430001D"/>-->
+<!--    useless when only have one camera-->
     <arg name="serial_number" default="AY3N430008K"/>
     <arg name="usb_port" default="4-1-2"/>
     <arg name="device_num" default="1"/>
