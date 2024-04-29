@@ -1,0 +1,49 @@
+# start all: lebai moveit: control with moveit and run cameras
+# the path of run.launch is: /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_lm3_moveit_config/launch (not in the -original directory)
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
+
+# save point cloud 2 as ply using orbbec service:
+# the ply file is saved in the /home/.ros/point_cloud directory
+rosservice call /camera/save_point_cloud "{}"
+
+#######################################################################################################
+# lebai control: only control
+roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
+
+# lebai moveit: control with moveit and run cameras
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
+roslaunch lebai_lm3_moveit_config run.launch sim:=true
+
+# lebai moveit: only with moveit
+roslaunch lebai_lm3_moveit_config run_only_moveit.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
+
+# adjust camera
+roslaunch lebai_lm3_moveit_config gemini2_adjust_camera.launch
+
+# launch bridge
+roslaunch rosbridge_server rosbridge_websocket.launch
+
+# launch orbbec
+roslaunch orbbec_camera gemini2.launch
+roslaunch orbbec_camera pal_aruco_ros_single.launch
+
+# launch rviz
+rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
+
+# data
+1.6378121124656506, -2.0494942064144595, 2.052370420391745, -1.5819176875070675, -1.571083948192625, -1.5609213254728826
+
+
+################# might be useful #################
+# lebai control: only control
+roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
+
+# lebai moveit: control with moveit
+roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
+
+# launch orbbec
+roslaunch orbbec_camera gemini2.launch
+
+# launch rviz
+rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
