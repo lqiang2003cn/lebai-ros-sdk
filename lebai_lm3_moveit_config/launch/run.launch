@@ -45,7 +45,12 @@
     <arg name="moveit_warehouse_database_path" value="$(arg db_path)"/>
   </include>
 
-  <include file="$(find lebai_lm3_moveit_config)/launch/gemini2_only_camera.launch">
+<!--  <include file="$(find lebai_lm3_moveit_config)/launch/gemini2_only_camera.launch">-->
+<!--&lt;!&ndash;    <arg name="usb_port" value="8-2-2"/>&ndash;&gt;-->
+<!--&lt;!&ndash;    <arg name="usb_port" value="4-1-2"/>&ndash;&gt;-->
+<!--  </include>-->
+
+  <include file="$(find lebai_lm3_moveit_config)/launch/multi_camera.launch">
   </include>
 
   <include file="$(find lebai_lm3_moveit_config)/launch/marker_publisher.launch">

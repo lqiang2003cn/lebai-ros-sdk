@@ -118,8 +118,7 @@
             <param name="trigger_signal_output_delay_us" value="$(arg trigger_signal_output_delay_us)"/>
             <param name="trigger_signal_output_enabled" value="$(arg trigger_signal_output_enabled)"/>
             <param name="depth_work_mode" value="$(arg depth_work_mode)"/>
-            <remap from="/$(arg camera_name)/depth/color/points"
-                   to="/$(arg camera_name)/depth_registered/points"/>
+            <remap from="/$(arg camera_name)/depth/color/points" to="/$(arg camera_name)/depth_registered/points"/>
         </node>
     </group>
 
