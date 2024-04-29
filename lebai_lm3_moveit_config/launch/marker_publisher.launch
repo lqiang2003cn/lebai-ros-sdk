@@ -1,16 +1,19 @@
 <launch>
 
     <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
-        <remap from="/camera_info" to="/camera/color/camera_info" />
-        <remap from="/image" to="/camera/color/image_raw" />
+        <remap from="/camera_info" to="/camera/color/camera_info"/>
+        <remap from="/image" to="/camera/color/image_raw"/>
         <param name="image_is_rectified" value="True"/>
-        <param name="marker_size"        value="0.04"/>
-        <param name="reference_frame"    value="world"/>
-        <param name="camera_frame"       value="camera_color_optical_frame"/>
+        <param name="marker_size" value="0.04"/>
+        <param name="reference_frame" value="world"/>
+        <param name="camera_frame" value="camera_color_optical_frame"/>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="camera_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
-  0.71713206 world camera_link 10" />
+    <node pkg="tf" type="static_transform_publisher" name="camera_01_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
+  0.71713206 world ob_camera_01_link 10"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="camera_02_to_world" args="0.47753488 -0.34857237  0.54000228  0.1308692   0.67379761 -0.1207959
+  0.71713206 world ob_camera_02_link 10"/>
 
 </launch>
 

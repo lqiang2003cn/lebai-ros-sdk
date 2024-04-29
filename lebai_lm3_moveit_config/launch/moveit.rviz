@@ -4,17 +4,14 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /MotionPlanning1
         - /MotionPlanning1/Scene Geometry1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
-        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /RobotModel1
         - /RobotModel1/Links1
       Splitter Ratio: 0.4969818890094757
-    Tree Height: 405
+    Tree Height: 311
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -313,20 +310,6 @@ Visualization Manager:
           Value: false
         base_link:
           Value: false
-        camera_color_frame:
-          Value: false
-        camera_color_optical_frame:
-          Value: false
-        camera_depth_frame:
-          Value: false
-        camera_depth_optical_frame:
-          Value: false
-        camera_ir_frame:
-          Value: false
-        camera_ir_optical_frame:
-          Value: false
-        camera_link:
-          Value: true
         gripper_base_link:
           Value: false
         gripper_l_link1:
@@ -354,6 +337,34 @@ Visualization Manager:
         link_5:
           Value: false
         link_6:
+          Value: true
+        ob_camera_01_color_frame:
+          Value: true
+        ob_camera_01_color_optical_frame:
+          Value: true
+        ob_camera_01_depth_frame:
+          Value: true
+        ob_camera_01_depth_optical_frame:
+          Value: true
+        ob_camera_01_ir_frame:
+          Value: true
+        ob_camera_01_ir_optical_frame:
+          Value: true
+        ob_camera_01_link:
+          Value: true
+        ob_camera_02_color_frame:
+          Value: true
+        ob_camera_02_color_optical_frame:
+          Value: true
+        ob_camera_02_depth_frame:
+          Value: true
+        ob_camera_02_depth_optical_frame:
+          Value: true
+        ob_camera_02_ir_frame:
+          Value: true
+        ob_camera_02_ir_optical_frame:
+          Value: true
+        ob_camera_02_link:
           Value: true
         tool0:
           Value: false
@@ -388,15 +399,25 @@ Visualization Manager:
                             gripper_r_link2:
                               gripper_r_link_finger:
                                 {}
-          camera_link:
-            camera_color_frame:
-              camera_color_optical_frame:
+          ob_camera_01_link:
+            ob_camera_01_color_frame:
+              ob_camera_01_color_optical_frame:
                 {}
-            camera_depth_frame:
-              camera_depth_optical_frame:
+            ob_camera_01_depth_frame:
+              ob_camera_01_depth_optical_frame:
                 {}
-            camera_ir_frame:
-              camera_ir_optical_frame:
+            ob_camera_01_ir_frame:
+              ob_camera_01_ir_optical_frame:
+                {}
+          ob_camera_02_link:
+            ob_camera_02_color_frame:
+              ob_camera_02_color_optical_frame:
+                {}
+            ob_camera_02_depth_frame:
+              ob_camera_02_depth_optical_frame:
+                {}
+            ob_camera_02_ir_frame:
+              ob_camera_02_ir_optical_frame:
                 {}
       Update Interval: 0
       Value: true
@@ -419,14 +440,15 @@ Visualization Manager:
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /camera/color/image_raw
-      Name: Camera
+      Image Topic: /ob_camera_01/color/image_raw
+      Name: Camera_01
       Overlay Alpha: 0.5
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
       Value: true
       Visibility:
+        Camera_02: true
         Grid: true
         MotionPlanning: true
         PointCloud2: true
@@ -478,6 +500,26 @@ Visualization Manager:
       Topic: /aruco_single/pose
       Unreliable: false
       Value: true
+    - Class: rviz/Camera
+      Enabled: true
+      Image Rendering: background and overlay
+      Image Topic: /ob_camera_02/color/image_raw
+      Name: Camera_02
+      Overlay Alpha: 0.5
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+      Visibility:
+        Camera_01: true
+        Grid: true
+        MotionPlanning: true
+        PointCloud2: true
+        Pose: true
+        RobotModel: true
+        TF: true
+        Value: false
+      Zoom Factor: 1
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -494,7 +536,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.49843692779541
+      Distance: 3.709738254547119
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -515,7 +557,9 @@ Visualization Manager:
       Yaw: 5.8423848152160645
     Saved: ~
 Window Geometry:
-  Camera:
+  Camera_01:
+    collapsed: false
+  Camera_02:
     collapsed: false
   Displays:
     collapsed: false
@@ -528,7 +572,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000200000000000001f3000003a7fc0200000006fb000000100044006900730070006c006100790073010000003d000001d2000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720100000215000000410000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000025c000001880000017d00ffffff0000000100000186000003a7fc0200000002fb0000000c00430061006d006500720061010000003d000003a70000001600fffffffb0000000c00430061006d006500720061000000003d000003a70000000000000000000003d0000003a700000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000200000000000001f3000003a7fc0200000006fb000000100044006900730070006c006100790073010000003d00000174000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c006900640065007201000001b7000000500000004100fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000020d000001d70000017d00ffffff0000000100000391000003a7fc0200000003fb0000001200430061006d006500720061005f00300032010000003d000001c50000001600fffffffb0000001200430061006d006500720061005f003000310100000208000001dc0000001600fffffffb0000000c00430061006d006500720061000000003d000003a70000000000000000000001c5000003a700000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1877
