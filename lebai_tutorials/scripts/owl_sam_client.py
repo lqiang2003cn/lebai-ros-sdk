@@ -31,14 +31,14 @@ class Nodo(object):
         self.loop_rate = rospy.Rate(1.0)
 
         # call services
-        self.point_cloud_service = rospy.ServiceProxy('/camera/save_point_cloud', EmptyRequest)
+        # self.point_cloud_service = rospy.ServiceProxy('/camera/save_point_cloud', EmptyRequest)
 
         # Publishers
         self.pub = rospy.Publisher('imagetimer', Image, queue_size=10)
 
         # Subscribers
-        rospy.Subscriber("/camera/color/image_raw", Image, self.rgb_callback)
-        rospy.Subscriber("/camera/depth_registered/points", PointCloud2, self.pointcloud2_callback)
+        rospy.Subscriber("/ob_camera_01/color/image_raw", Image, self.rgb_callback)
+        # rospy.Subscriber("/camera/depth_registered/points", PointCloud2, self.pointcloud2_callback)
 
     def rgb_callback(self, msg):
         self.image = self.br.imgmsg_to_cv2(msg)
@@ -46,16 +46,14 @@ class Nodo(object):
     def pointcloud2_callback(self, msg):
         self.pointcloud2 = msg
 
-
-
     def request_owl_vit(self):
         while self.image is None:
             print "waiting for image"
             self.loop_rate.sleep()
 
-        while self.pointcloud2 is None:
-            print "waiting for pointcloud"
-            self.loop_rate.sleep()
+        # while self.pointcloud2 is None:
+        #     print "waiting for pointcloud"
+        #     self.loop_rate.sleep()
 
         json_data = {
             "image": self.image.tolist(),
@@ -82,7 +80,7 @@ class Nodo(object):
 if __name__ == '__main__':
     rospy.init_node("image_vis", anonymous=True)
     my_node = Nodo()
-    my_node.point_cloud_service()
+    # my_node.point_cloud_service()
     # my_node.texts = ["red block", "blue block", "yellow block", "green block"]
     my_node.texts = ["yellow cup"]
     my_node.request_owl_vit()

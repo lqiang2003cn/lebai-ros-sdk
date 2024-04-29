@@ -8,6 +8,10 @@ roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252
 # the ply file is saved in the /home/.ros/point_cloud directory
 rosservice call /camera/save_point_cloud "{}"
 
+# for multiple cameras: must click on the PointCloud2 topic in rviz, otherwise it will not work
+rosservice call /ob_camera_01/save_point_cloud "{}"
+rosservice call /ob_camera_02/save_point_cloud "{}"
+
 #######################################################################################################
 # lebai control: only control
 roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1
