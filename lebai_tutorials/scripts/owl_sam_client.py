@@ -15,6 +15,7 @@ from cv_bridge import CvBridge
 from geometry_msgs.msg import Point32
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2, PointField, PointCloud
+import ros_numpy
 
 import utils
 
@@ -69,6 +70,12 @@ class Nodo(object):
 
     @staticmethod
     def convertCloudFromRosToOpen3d(ros_cloud):
+
+        parray = ros_numpy.point_cloud2.pointcloud2_to_array(ros_cloud)
+
+
+        # mask = np.load('masks.npy')[0].reshape(-1)
+
         # Get cloud data from ros_cloud
         field_names = [field.name for field in ros_cloud.fields]
         cloud_data = list(pc2.read_points(ros_cloud, skip_nans=True, field_names=field_names))
