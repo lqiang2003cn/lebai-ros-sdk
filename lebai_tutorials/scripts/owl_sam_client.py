@@ -132,12 +132,15 @@ class Nodo(object):
             "texts": self.texts
         }
 
-        rgb, xyz = Nodo.convertCloudFromRosToOpen3d(self.pointcloud2)
+        # rgb, xyz = Nodo.convertCloudFromRosToOpen3d(self.pointcloud2)
 
         p = PointCloud()
         # p.header.stamp = rospy.Time.now()
         p.header.frame_id = "ob_camera_01_color_optical_frame"
-        p.points = xyz
+        # p.points = xyz
+
+        b = PointCloud()
+        b.header.frame_id = "base_link"
 
         # p2 = PointCloud2()
 
@@ -155,6 +158,9 @@ class Nodo(object):
             #     xyz = tuple(numpy.dot(mat44, numpy.array([p.x, p.y, p.z, 1.0])))[:3]
             #     return geometry_msgs.msg.Point(*xyz)
             # r.points = [xf(p) for p in self.pointcloud2.points]
+
+                b = listener.asMatrix(p.header.frame_id, b.header)
+                np.save("matrix_cam_to_base.npy", b)
                 p = listener.transformPointCloud("base_link", p)
                 break
             except Exception as e:
