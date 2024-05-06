@@ -77,68 +77,88 @@ class Nodo(object):
             print "waiting for pointcloud"
             self.sleep_rate.sleep()
 
+        ################## Whole Steps:Start ##################
+        # # get transform masks
+        # target_frame = "base_link"
+        # cam_frames = ["ob_camera_01_color_optical_frame", "ob_camera_02_color_optical_frame"]
+        # listener = tf.TransformListener()
+        # listener.clear()
+        # base_to_cam_matrix_list = []
+        # for cf in cam_frames:
+        #     while not rospy.is_shutdown():
+        #         try:
+        #             listener.waitForTransform(target_frame, cf, rospy.Time(), rospy.Duration(4))
+        #             translation, rotation = listener.lookupTransform(target_frame, cf, rospy.Time(0))
+        #             base_to_cam_matrix_list.append(listener.fromTranslationRotation(translation, rotation))
+        #             break
+        #         except Exception as e:
+        #             assert e
+        #             self.sleep_rate.sleep()
+        #
+        # json_data = {
+        #     "cameras": ["cam01", "cam02"],
+        #     "images": [self.cam01_rgb.tolist(), self.cam02_rgb.tolist()],
+        #     # "pc_points": [cam01_pc_points.tolist(), cam02_pc_points.tolist()],
+        #     # "pc_rgbs": [cam01_pc_rgb.tolist(), cam02_pc_rgb.tolist()],
+        #     "texts": [self.texts, self.texts]
+        # }
+        # response = utils.post_json_no_proxy("handle_all_json", json_data)
+        #
+        # # get masked points: using mask to filter point cloud
+        # mask_list = response.json()['mask_list']
+        # pc_list = [self.cam01_pc, self.cam02_pc]
+        # filtered_points_list = []
+        # filtered_rgbs_list = []
+        # for i, m in enumerate(mask_list):
+        #     m_np = np.array(m)[0]  # assuming there is only one mask?
+        #     pc_array = rnp.point_cloud2.pointcloud2_to_array(pc_list[i]).reshape((480, 640))[m_np]
+        #     filtered_points_list.append(rnp.point_cloud2.get_xyz_points(pc_array))
+        #     pc_rgb_split = rnp.point_cloud2.split_rgb_field(pc_array)
+        #     pc_rgbs = np.zeros(pc_rgb_split.shape + (3,), dtype=np.int)
+        #     pc_rgbs[..., 0] = pc_rgb_split['r']
+        #     pc_rgbs[..., 1] = pc_rgb_split['g']
+        #     pc_rgbs[..., 2] = pc_rgb_split['b']
+        #     filtered_rgbs_list.append(pc_rgbs)
+        #
+        # # transform masked points
+        # transformed_points_list = []
+        # for i in range(len(cam_frames)):
+        #     filtered_points = filtered_points_list[i]
+        #     filtered_points_extend = np.c_[filtered_points, np.ones(len(filtered_points))]
+        #     base_to_cam_matrix = base_to_cam_matrix_list[i]
+        #     transformed_points = np.einsum('ij,kj->ki', base_to_cam_matrix, filtered_points_extend)
+        #     transformed_points_list.append(np.delete(transformed_points, 3, 1))
+        #
+        # # merge points: for two cameras
+        # all_points = np.concatenate([transformed_points_list[0], transformed_points_list[1]], axis=0)
+        # all_rgbs = np.concatenate([filtered_rgbs_list[0], filtered_rgbs_list[1]], axis=0)
+        # np.save("all_points.npy", all_points)
+        # np.save("all_rgbs.npy", all_rgbs)
 
-        # get transform masks
-        target_frame = "base_link"
-        cam_frames = ["ob_camera_01_color_optical_frame", "ob_camera_02_color_optical_frame"]
-        listener = tf.TransformListener()
-        listener.clear()
-        base_to_cam_matrix_list = []
-        for cf in cam_frames:
-            while not rospy.is_shutdown():
-                try:
-                    listener.waitForTransform(target_frame, cf, rospy.Time(), rospy.Duration(4))
-                    translation, rotation = listener.lookupTransform(target_frame, cf, rospy.Time(0))
-                    base_to_cam_matrix_list.append(listener.fromTranslationRotation(translation, rotation))
-                    break
-                except Exception as e:
-                    assert e
-                    self.sleep_rate.sleep()
+        # Load savings:
+        all_points = np.load("all_points.npy")
+        all_rgbs = np.load("all_rgbs.npy")
 
-        json_data = {
-            "cameras": ["cam01", "cam02"],
-            "images": [self.cam01_rgb.tolist(), self.cam02_rgb.tolist()],
-            # "pc_points": [cam01_pc_points.tolist(), cam02_pc_points.tolist()],
-            # "pc_rgbs": [cam01_pc_rgb.tolist(), cam02_pc_rgb.tolist()],
-            "texts": [self.texts, self.texts]
+        # calculate center of object: no outlier removal
+        # obj_dict = {
+        #     self.texts[0]: {
+        #         "center": np.mean(all_points, axis=0)
+        #     }
+        # }
+        center = np.mean(all_points, axis=0)
+
+        # calculate center with outlier removal
+        pc_json_data = {
+            "all_points": all_points.tolist(),
+            "all_rgbs": all_rgbs.tolist()
         }
-        response = utils.post_json_no_proxy("handle_all_json", json_data)
+        outlier_resp = utils.post_json_no_proxy("handle_outlier", pc_json_data)
+        outlier_resp_json = outlier_resp.json()
+        filtered_all_points_np = np.array(outlier_resp_json['filtered_all_points'])
+        filtered_center = np.mean(filtered_all_points_np, axis=0)
+        ################## Whole Steps:End ##################
 
-
-        # get masked points: using mask to filter point cloud
-        mask_list = response.json()['mask_list']
-        pc_list = [self.cam01_pc, self.cam02_pc]
-        filtered_points_list = []
-        filtered_rgbs_list = []
-        for i, m in enumerate(mask_list):
-            m_np = np.array(m)[0]  # assuming there is only one mask?
-            pc_array = rnp.point_cloud2.pointcloud2_to_array(pc_list[i]).reshape((480, 640))[m_np]
-            filtered_points_list.append(rnp.point_cloud2.get_xyz_points(pc_array))
-            pc_rgb_split = rnp.point_cloud2.split_rgb_field(pc_array)
-            pc_rgbs = np.zeros(pc_rgb_split.shape + (3,), dtype=np.int)
-            pc_rgbs[..., 0] = pc_rgb_split['r']
-            pc_rgbs[..., 1] = pc_rgb_split['g']
-            pc_rgbs[..., 2] = pc_rgb_split['b']
-            filtered_rgbs_list.append(pc_rgbs)
-
-
-        # transform masked points
-        transformed_points_list = []
-        for i in range(len(cam_frames)):
-            filtered_points = filtered_points_list[i]
-            filtered_points_extend = np.c_[filtered_points, np.ones(len(filtered_points))]
-            base_to_cam_matrix = base_to_cam_matrix_list[i]
-            transformed_points = np.einsum('ij,kj->ki', base_to_cam_matrix, filtered_points_extend)
-            transformed_points_list.append(np.delete(transformed_points, 3, 1))
-
-
-        # merge points: for two cameras
-        all_points = np.concatenate([transformed_points_list[0], transformed_points_list[1]], axis=0)
-        all_rgbs = np.concatenate([filtered_rgbs_list[0], filtered_rgbs_list[1]], axis=0)
-        np.save("all_points.npy", all_points)
-        np.save("all_rgbs.npy", all_rgbs)
-
-        # calculate center and bo
+        print ''
 
     def start(self):
         rospy.loginfo("Timing images")
