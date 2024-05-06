@@ -1,19 +1,37 @@
 <launch>
 
-    <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">
-        <remap from="/camera_info" to="/camera/color/camera_info"/>
-        <remap from="/image" to="/camera/color/image_raw"/>
+<!--    <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher">-->
+<!--        <remap from="/camera_info" to="/camera/color/camera_info"/>-->
+<!--        <remap from="/image" to="/camera/color/image_raw"/>-->
+<!--        <param name="image_is_rectified" value="True"/>-->
+<!--        <param name="marker_size" value="0.04"/>-->
+<!--        <param name="reference_frame" value="world"/>-->
+<!--        <param name="camera_frame" value="camera_color_optical_frame"/>-->
+<!--    </node>-->
+
+    <node pkg="aruco_ros" type="marker_publisher" name="cam01_aruco_marker_publisher">
+        <remap from="/camera_info" to="/ob_camera_01/color/camera_info"/>
+        <remap from="/image" to="/ob_camera_01/color/image_raw"/>
         <param name="image_is_rectified" value="True"/>
         <param name="marker_size" value="0.04"/>
         <param name="reference_frame" value="world"/>
-        <param name="camera_frame" value="camera_color_optical_frame"/>
+        <param name="camera_frame" value="ob_camera_01_color_optical_frame"/>
+    </node>
+
+    <node pkg="aruco_ros" type="marker_publisher" name="cam02_aruco_marker_publisher">
+        <remap from="/camera_info" to="/ob_camera_02/color/camera_info"/>
+        <remap from="/image" to="/ob_camera_02/color/image_raw"/>
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size" value="0.04"/>
+        <param name="reference_frame" value="world"/>
+        <param name="camera_frame" value="ob_camera_02_color_optical_frame"/>
     </node>
 
     <node pkg="tf" type="static_transform_publisher" name="camera_01_to_world"
-          args="0.50033641 -0.63821168  0.38514528 -0.14800998  0.01318743  0.97093654 0.18762029 world ob_camera_01_link 10"/>
+          args="0.50777705 -0.29590085  0.38367296 -0.21302105 -0.03441092  0.9723995 -0.08875327 base_link ob_camera_01_link 10"/>
 
     <node pkg="tf" type="static_transform_publisher" name="camera_02_to_world"
-          args="-0.52288035 -0.24032031  0.4167109   0.0088409   0.18369148 -0.1141961 0.97628814 world ob_camera_02_link 10"/>
+          args="-0.5489696  -0.32607117  0.38802943 -0.0421436   0.24360084  0.08854182 0.96490564 base_link ob_camera_02_link 10"/>
 
 </launch>
 

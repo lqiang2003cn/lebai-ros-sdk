@@ -1,8 +1,12 @@
 # please work in the [lebai-ros-sdk] directory not in the [lebai-ros-sdk-original] directory
+# the path of run.launch is: /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_lm3_moveit_config/launch (not in the -original directory)
 
 # start all: lebai moveit: control with moveit and run cameras
-# the path of run.launch is: /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_lm3_moveit_config/launch (not in the -original directory)
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
+
+# show aruco position for cameras
+rostopic echo -n 1 /cam01_aruco_marker_publisher/markers
+rostopic echo -n 1 /cam02_aruco_marker_publisher/markers
 
 # save point cloud 2 as ply using orbbec service:
 # the ply file is saved in the /home/.ros/point_cloud directory
