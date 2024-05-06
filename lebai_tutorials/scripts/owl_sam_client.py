@@ -77,21 +77,52 @@ class Nodo(object):
             print "waiting for pointcloud"
             self.sleep_rate.sleep()
 
+        cam01_pc_array = rnp.point_cloud2.pointcloud2_to_array(self.cam01_pc).reshape((480, 640))
+        cam01_pc_points = rnp.point_cloud2.get_xyz_points(cam01_pc_array)
+        cam01_pc_rgb_split = rnp.point_cloud2.split_rgb_field(cam01_pc_array)
+        cam01_pc_rgb = np.zeros(cam01_pc_rgb_split.shape + (3,), dtype=np.int)
+        cam01_pc_rgb[..., 0] = cam01_pc_rgb_split['r']
+        cam01_pc_rgb[..., 1] = cam01_pc_rgb_split['g']
+        cam01_pc_rgb[..., 2] = cam01_pc_rgb_split['b']
+
+        # cam02 masked pc
+        cam02_pc_array = rnp.point_cloud2.pointcloud2_to_array(self.cam02_pc).reshape((480, 640))
+        cam02_pc_points = rnp.point_cloud2.get_xyz_points(cam02_pc_array)
+        cam02_pc_rgb_split = rnp.point_cloud2.split_rgb_field(cam02_pc_array)
+        cam02_pc_rgb = np.zeros(cam02_pc_rgb_split.shape + (3,), dtype=np.int)
+        cam02_pc_rgb[..., 0] = cam02_pc_rgb_split['r']
+        cam02_pc_rgb[..., 1] = cam02_pc_rgb_split['g']
+        cam02_pc_rgb[..., 2] = cam02_pc_rgb_split['b']
+
+        json_data = {
+            "cameras": ["cam01", "cam02"],
+            "images": [self.cam01_rgb.tolist(), self.cam02_rgb.tolist()],
+            # "pc_points": [cam01_pc_points.tolist(), cam02_pc_points.tolist()],
+            # "pc_rgbs": [cam01_pc_rgb.tolist(), cam02_pc_rgb.tolist()],
+            "texts": [self.texts, self.texts]
+        }
+        response1 = utils.post_json_no_proxy("handle_all_json", json_data)
+        print ''
+
         # get cam01 mask
         cam1_json_data = {
+            "cam": "cam01",
             "image": self.cam01_rgb.tolist(),
             "texts": self.texts
         }
         response1 = utils.post_json_no_proxy("owl_vit", cam1_json_data)
         cam01_mask = np.array(response1.json()['mask'])[0]
+        cam01_mask = np.load("masks_cam01.npy")[0]
 
         # get cam02 mask
-        cam2_json_data = {
-            "image": self.cam02_rgb.tolist(),
-            "texts": self.texts
-        }
-        response2 = utils.post_json_no_proxy("owl_vit", cam2_json_data)
-        cam02_mask = np.array(response2.json()['mask'])[0]
+        # cam2_json_data = {
+        #     "cam": "cam02",
+        #     "image": self.cam02_rgb.tolist(),
+        #     "texts": self.texts
+        # }
+        # response2 = utils.post_json_no_proxy("owl_vit", cam2_json_data)
+        # cam02_mask = np.array(response2.json()['mask'])[0]
+        cam02_mask = np.load("masks_cam02.npy")[0]
 
         # cam01 masked pc
         cam01_pc_array = rnp.point_cloud2.pointcloud2_to_array(self.cam01_pc).reshape((480, 640))[cam01_mask]
@@ -112,7 +143,10 @@ class Nodo(object):
         cam02_pc_rgb[..., 2] = cam02_pc_rgb_split['b']
 
         # merge cam01 and cam02
-
+        all_xyz = np.concatenate([cam01_pc_xyz, cam02_pc_xyz], axis=0)
+        np.save("all_xyz.npy", all_xyz)
+        all_colors = np.concatenate([cam01_pc_rgb, cam02_pc_rgb], axis=0)
+        np.save("all_colors.npy", all_colors)
         p = PointCloud()
         # p.header.stamp = rospy.Time.now()
         p.header.frame_id = "ob_camera_01_color_optical_frame"
