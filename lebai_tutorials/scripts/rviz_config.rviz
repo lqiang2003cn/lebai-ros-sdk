@@ -64,10 +64,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        cam01_aruco_marker_frame:
-          Value: true
-        cam02_aruco_marker_frame:
-          Value: false
         ob_camera_01_color_frame:
           Value: false
         ob_camera_01_color_optical_frame:
@@ -105,8 +101,7 @@ Visualization Manager:
         ob_camera_01_link:
           ob_camera_01_color_frame:
             ob_camera_01_color_optical_frame:
-              cam01_aruco_marker_frame:
-                {}
+              {}
           ob_camera_01_depth_frame:
             ob_camera_01_depth_optical_frame:
               {}
@@ -116,8 +111,7 @@ Visualization Manager:
         ob_camera_02_link:
           ob_camera_02_color_frame:
             ob_camera_02_color_optical_frame:
-              cam02_aruco_marker_frame:
-                {}
+              {}
           ob_camera_02_depth_frame:
             ob_camera_02_depth_optical_frame:
               {}
@@ -183,7 +177,7 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
+        Axes: true
         Grid: true
         PointCloud2: true
         TF: true
@@ -201,7 +195,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: cam01_aruco_marker_frame
+    Fixed Frame: ob_camera_01_link
     Frame Rate: 30
   Name: root
   Tools:

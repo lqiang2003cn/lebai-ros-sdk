@@ -157,6 +157,7 @@ class Nodo(object):
         # todo: compare with aruco
 
         print 'filtered center' + str(filtered_center)
+        return filtered_center
 
     def start(self):
         rospy.loginfo("Timing images")
@@ -175,4 +176,5 @@ if __name__ == '__main__':
     # my_node.point_cloud_service()
     # my_node.texts = ["red block", "blue block", "yellow block", "green block"]
     my_node.texts = ["yellow cup"]
-    my_node.request_owl_vit()
+    cup_center = my_node.request_owl_vit()
+

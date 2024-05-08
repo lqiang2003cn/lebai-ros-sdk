@@ -28,10 +28,10 @@
     </node>
 
     <node pkg="tf" type="static_transform_publisher" name="camera_01_to_world"
-          args="0.50777705 -0.29590085  0.38367296 -0.21302105 -0.03441092  0.9723995 -0.08875327 base_link ob_camera_01_link 10"/>
+          args="0.465166 -0.42590476  0.37634892 -0.20534141 -0.02751783  0.97597023 -0.06752613 base_link ob_camera_01_link 10"/>
 
     <node pkg="tf" type="static_transform_publisher" name="camera_02_to_world"
-          args="-0.5489696  -0.32607117  0.38802943 -0.0421436   0.24360084  0.08854182 0.96490564 base_link ob_camera_02_link 10"/>
+          args="-0.54326354 -0.37640119  0.37693942 -0.00958675  0.23628084  0.01173544 0.97156664 base_link ob_camera_02_link 10"/>
 
 </launch>
 
