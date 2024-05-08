@@ -16,6 +16,9 @@ rosservice call /camera/save_point_cloud "{}"
 rosservice call /ob_camera_01/save_point_cloud "{}"
 rosservice call /ob_camera_02/save_point_cloud "{}"
 
+# moveit assistant
+roslaunch moveit_setup_assistant setup_assistant.launch
+
 #######################################################################################################
 # lebai control: only control
 roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.20.17.1 has_gripper:=1

@@ -177,4 +177,5 @@ if __name__ == '__main__':
     # my_node.texts = ["red block", "blue block", "yellow block", "green block"]
     my_node.texts = ["yellow cup"]
     cup_center = my_node.request_owl_vit()
+    # moveit
 

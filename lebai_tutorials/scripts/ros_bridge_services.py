@@ -11,7 +11,7 @@ import moveit_msgs.msg as mm
 import numpy as np
 import rospy
 from aruco_msgs.msg import MarkerArray
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Pose
 from tf2_ros import StaticTransformBroadcaster
 
 from lebai_tutorials.srv import JsonInfo
@@ -35,10 +35,11 @@ class RosBridgeServices:
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.group_name = "manipulator"
-        self.move_group = moveit_commander.MoveGroupCommander(self.group_name)
+        self.manipulator_group = moveit_commander.MoveGroupCommander(self.group_name)
+        self.joint1_group = moveit_commander.MoveGroupCommander("joint1_group")
         self.display_trajectory_publisher = rospy.Publisher(display_traj_topic, mm.DisplayTrajectory, queue_size=20)
-        self.planning_frame = self.move_group.get_planning_frame()
-        self.eef_link = self.move_group.get_end_effector_link()
+        self.planning_frame = self.manipulator_group.get_planning_frame()
+        self.eef_link = self.manipulator_group.get_end_effector_link()
 
         # init fields
         self.aruco_list = None
@@ -71,12 +72,12 @@ class RosBridgeServices:
             print "Service call failed: %s" % e
 
     def change_joint0(self, joint0_val):
-        joint_goal = self.move_group.get_current_joint_values()
+        joint_goal = self.manipulator_group.get_current_joint_values()
         joint_goal[0] = joint0_val
-        p = self.move_group.plan(joint_goal)
+        p = self.manipulator_group.plan(joint_goal)
         self.display_trajectory(p)
         self.execute_plan(p)
-        self.move_group.stop()
+        self.manipulator_group.stop()
 
     def display_trajectory(self, plan):
         robot = self.robot
@@ -87,7 +88,7 @@ class RosBridgeServices:
         display_trajectory_publisher.publish(display_trajectory)
 
     def execute_plan(self, plan):
-        move_group = self.move_group
+        move_group = self.manipulator_group
         move_group.execute(plan, wait=True)
         move_group.stop()
         move_group.clear_pose_targets()
@@ -102,7 +103,7 @@ class RosBridgeServices:
         desk_pose.pose.position.z = -0.1
         self.scene.add_box("desk", desk_pose, size=(1.4, 1.4, 0.25))
         self.scene.add_sphere('s', desk_pose, radius=0.075 / 2)
-        print(self.move_group.get_end_effector_link())
+        print(self.manipulator_group.get_end_effector_link())
         self.wait_for_state_update('desk', box_is_known=True, box_is_attached=False)
 
         link6_box_pose = gm.PoseStamped()
@@ -155,8 +156,8 @@ class RosBridgeServices:
         constraints.name = "upright"
         orientation_constraint = OrientationConstraint()
         orientation_constraint.header.frame_id = 'world'
-        orientation_constraint.link_name = self.move_group.get_end_effector_link()
-        current_pose = self.move_group.get_current_pose().pose
+        orientation_constraint.link_name = self.manipulator_group.get_end_effector_link()
+        current_pose = self.manipulator_group.get_current_pose().pose
         orientation_constraint.orientation = current_pose.orientation
         orientation_constraint.absolute_x_axis_tolerance = x
         orientation_constraint.absolute_y_axis_tolerance = y
@@ -164,6 +165,9 @@ class RosBridgeServices:
         orientation_constraint.weight = 1
         constraints.orientation_constraints.append(orientation_constraint)
         return constraints
+
+    # def move_in_joint1_group(self, tip_orientation):
+    #     self.joint1_group.
 
     def move_item_to_output_area(self, params):
         assert params is not None
@@ -184,12 +188,12 @@ class RosBridgeServices:
 
             # move to item's top position
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
+            self.manipulator_group.set_path_constraints(ori_con)
             prepick_pos, prepick_quat = autil.get_circle_pose_by_pose_msg(item_pose_in_world)
             prepick_pose = autil.get_pose_msg_from_pos_and_ori(prepick_pos, prepick_quat)
             is_plan_found = False
             waypoints = [copy.deepcopy(prepick_pose)]
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 5.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -197,19 +201,19 @@ class RosBridgeServices:
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # move to item's front position
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
-            current_pose = self.move_group.get_current_pose().pose
+            self.manipulator_group.set_path_constraints(ori_con)
+            current_pose = self.manipulator_group.get_current_pose().pose
             pick_pose = copy.deepcopy(current_pose)
             pick_pose.position.z = 0.12
             is_plan_found = False
             waypoints = [copy.deepcopy(pick_pose)]
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 0.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -217,14 +221,14 @@ class RosBridgeServices:
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # move to item's pick position
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
-            current_pose = self.move_group.get_current_pose().pose
+            self.manipulator_group.set_path_constraints(ori_con)
+            current_pose = self.manipulator_group.get_current_pose().pose
             prepick_mat = autil.get_matrix_from_pose_msg(current_pose)
             obj_pos_diff = [0, 0, 0.1]
             prepick_transform_mat = autil.get_matrix_from_pos_and_quat(obj_pos_diff, [0, 0, 0, 1])
@@ -232,7 +236,7 @@ class RosBridgeServices:
             prepick_pose = autil.get_pose_msg_from_matrix(prepick_mat)
             is_plan_found = False
             waypoints = [copy.deepcopy(prepick_pose)]
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 0.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -240,9 +244,9 @@ class RosBridgeServices:
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # close gripper
             rospy.wait_for_service('/io_service/set_gripper_position')
@@ -256,12 +260,12 @@ class RosBridgeServices:
 
             # move to top again
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
+            self.manipulator_group.set_path_constraints(ori_con)
             prepick_pos, prepick_quat = autil.get_circle_pose_by_pose_msg(item_pose_in_world)
             prepick_pose = autil.get_pose_msg_from_pos_and_ori(prepick_pos, prepick_quat)
             is_plan_found = False
             waypoints = [copy.deepcopy(prepick_pose)]
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 0.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -269,15 +273,15 @@ class RosBridgeServices:
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # move to output area: for now, fixed
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
+            self.manipulator_group.set_path_constraints(ori_con)
             # fixed position
-            current_pose = self.move_group.get_current_pose().pose
+            current_pose = self.manipulator_group.get_current_pose().pose
             prepick_pose = copy.deepcopy(current_pose)
             prepick_pose.position.x = -0.094
             prepick_pose.position.y = -0.358
@@ -287,7 +291,7 @@ class RosBridgeServices:
             prepick_pose.orientation.w = -0.057
             waypoints = [prepick_pose]
             is_plan_found = False
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 0.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -297,19 +301,19 @@ class RosBridgeServices:
                 self.execute_plan(plan)
             else:
                 return json.dumps({"status": "plan failed"})
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # move to place on table
             ori_con = self.get_orientation_constraint(3.14, 0.01, 3.14)
-            self.move_group.set_path_constraints(ori_con)
-            current_pose = self.move_group.get_current_pose().pose
+            self.manipulator_group.set_path_constraints(ori_con)
+            current_pose = self.manipulator_group.get_current_pose().pose
             pick_pose = copy.deepcopy(current_pose)
             pick_pose.position.z -= 0.08
             is_plan_found = False
             waypoints = [copy.deepcopy(pick_pose)]
-            plan, fraction = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 0.0)
             if fraction == 1.0 and len(plan.joint_trajectory.points) >= 2:
                 print 'constrained plan found'
                 is_plan_found = True
@@ -317,9 +321,9 @@ class RosBridgeServices:
             if is_plan_found:
                 print 'executing plan'
                 self.execute_plan(plan)
-            self.move_group.stop()
-            self.move_group.clear_path_constraints()
-            self.move_group.clear_pose_targets()
+            self.manipulator_group.stop()
+            self.manipulator_group.clear_path_constraints()
+            self.manipulator_group.clear_pose_targets()
 
             # open gripper
             gripper_force_controller = rospy.ServiceProxy('/io_service/set_gripper_force', SetGripper)
@@ -331,7 +335,6 @@ class RosBridgeServices:
             return json.dumps(res)
         except rospy.ServiceException, e:
             print "Service call failed: %s" % e
-
 
     def make_transforms(self, parent_frame_id, child_frame_id, transform_pose, rate):
         static_transformStamped = TransformStamped()
@@ -351,7 +354,39 @@ class RosBridgeServices:
             tf_publisher.sendTransform(static_transformStamped)
             rate.sleep()
 
+    def plan_and_exe_by_pose(self, object_pose):
+        for ti in range(5):
+            waypoints = [object_pose]
+            is_plan_found = False
+            ori_con = self.get_orientation_constraint(0.01, 0.01, 0.01)
+            self.manipulator_group.set_path_constraints(ori_con)
+            plan, fraction = self.manipulator_group.compute_cartesian_path(waypoints, 0.01, 5.0)
+            print('fraction	is:' + str(fraction))
+            if fraction >= 0.97 and len(plan.joint_trajectory.points) >= 2:
+                print('constrained plan found')
+                is_plan_found = True
+            if is_plan_found:
+                print('cartisian plan found, executing plan')
+                self.execute_plan(plan)
+                break
+            else:
+                print('cartisian plan not found')
+
+    def get_curr_pose(self):
+        return copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+
 
 if __name__ == "__main__":
     ros_services = RosBridgeServices()
-    rospy.spin()
+    curr_pose = ros_services.get_curr_pose()
+    # get xy plan of cup center
+    # -0.01697206 -0.46031969
+    curr_pose.position.x = -0.01697206
+    curr_pose.position.y = -0.46031969
+
+    # calculate cup orientation and change the pose orientation
+
+    ros_services.plan_and_exe_by_pose(curr_pose)
+
+    # ros_services.
+    # rospy.spin()

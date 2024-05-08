@@ -126,6 +126,7 @@
 
 <link name="${prefix}gripper_tip" />
 
+<link name="${prefix}end_effector" />
 
 
 <!-- end of link list -->
@@ -181,6 +182,9 @@
       <child link="${prefix}gripper_tip"/>
       <origin xyz="0.0115 0.0 0.0" rpy="0.0 0.0 0.0"/>
 </joint>
+
+
+
 
 </xacro:macro>
 </robot>

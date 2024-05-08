@@ -12,5 +12,10 @@
   	<joint name="fixed_gripper" type="fixed">
     	<parent link="tool0"/>
     	<child link="gripper_base_link"/>
-  	</joint>	  
+  	</joint>
+	<joint name="tool0_to_end_effector_joint" type="fixed">
+		<parent link="tool0"/>
+		<child link="end_effector"/>
+		<origin xyz="0.0 0.0 0.17" rpy="0.0 0.0 0.0"/>
+	</joint>
 </robot>
