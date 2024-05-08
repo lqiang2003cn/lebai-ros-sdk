@@ -43,6 +43,8 @@ class RosBridgeServices:
         # init fields
         self.aruco_list = None
         self.target_pose = None
+        self.rest_position = [-0.511375553809, -0.055511297117, 0.244690925176]
+        self.rest_quant = [-0.525432651631, -0.465749836507, 0.472192081294, 0.532946767283]
 
         # subscribes
         rospy.Subscriber("/aruco_marker_publisher/markers", MarkerArray, self.aruco_call_back)
@@ -55,12 +57,16 @@ class RosBridgeServices:
 
         # add scene objects
         self.add_objects_to_scene()
+        self.sleep_rate = rospy.Rate(1.0)
 
     def target_pose_callback(self, target_pose):
         self.target_pose = copy.deepcopy(target_pose.pose)
 
     def aruco_call_back(self, marker_array):
         self.aruco_list = marker_array.markers
+
+    def get_rest_pose(self):
+        return autil.get_pose_msg_from_pos_and_ori(self.rest_position, self.rest_quant)
 
     def get_goods_info(self, params):
         assert params is not None
@@ -105,7 +111,7 @@ class RosBridgeServices:
         desk_pose.header.frame_id = "world"
         desk_pose.pose.orientation.w = 1.0
         desk_pose.pose.position.z = -0.1
-        self.scene.add_box("desk", desk_pose, size=(1.4, 1.4, 0.25))
+        self.scene.add_box("desk", desk_pose, size=(1.4, 1.4, 0.2))
         self.scene.add_sphere('s', desk_pose, radius=0.075 / 2)
         print(self.manipulator_group.get_end_effector_link())
         self.wait_for_state_update('desk', box_is_known=True, box_is_attached=False)
@@ -358,7 +364,36 @@ class RosBridgeServices:
             tf_publisher.sendTransform(static_transformStamped)
             rate.sleep()
 
-    def plan_and_exe_by_target_pose(self, object_pose):
+    def go_to_rest_pose(self):
+        # go to height first
+        rest_pose = self.get_rest_pose()
+        waypoints = []
+        wpose = self.manipulator_group.get_current_pose().pose
+        wpose.position.z = rest_pose.position
+        wpose.position.y +=  0.2  # and sideways (y)
+        waypoints.append(copy.deepcopy(wpose))
+
+        wpose.position.x +=  0.1  # Second move forward/backwards in (x)
+        waypoints.append(copy.deepcopy(wpose))
+
+        wpose.position.y -=  0.1  # Third move sideways (y)
+        waypoints.append(copy.deepcopy(wpose))
+
+        # We want the Cartesian path to be interpolated at a resolution of 1 cm
+        # which is why we will specify 0.01 as the eef_step in Cartesian
+        # translation.  We will disable the jump threshold by setting it to 0.0,
+        # ignoring the check for infeasible jumps in joint space, which is sufficient
+        # for this tutorial.
+        (plan, fraction) = move_group.compute_cartesian_path(
+            waypoints,   # waypoints to follow
+            0.01,        # eef_step
+            0.0)
+
+def plan_and_exe_by_target_pose(self, object_pose):
+        while self.target_pose is None:
+            print "waiting for target pose"
+            self.sleep_rate.sleep()
+
         for ti in range(5):
             waypoints = [object_pose]
             is_plan_found = False
@@ -390,8 +425,7 @@ if __name__ == "__main__":
     # target_position = [center[0], center[1], curr_pose.position.z]
     # target_quant = autil.get_target_quant_from_obj_position(center)
     # target_pose = autil.get_pose_msg_from_pos_and_ori(target_position, target_quant)
-    if ros_services.target_pose is not None:
-        ros_services.plan_and_exe_by_target_pose(ros_services.target_pose)
+    ros_services.plan_and_exe_by_target_pose(ros_services.target_pose)
 
     # ros_services.
     # rospy.spin()

@@ -26,8 +26,8 @@ def adjust_camera_01():
     box_in_world[0:3, 2] = [0, 0, 1]
     position1_x = 0
     position1_y = -0.2348
-    num_of_x_incr_blocks = 2  # if this is positive, put x-y corner to the right of the grid
-    num_of_y_incr_blocks = 2
+    num_of_x_incr_blocks = 1  # if this is positive, put x-y corner to the right of the grid
+    num_of_y_incr_blocks = 3
     len_of_x = 0.068  # JBL
     len_of_y = 0.082  # JBL
     x_to_aruco_center = 0.03 if num_of_x_incr_blocks >= 0 else -0.03
@@ -45,7 +45,7 @@ def adjust_camera_01():
     # step2.3: run the command in a terminal continuously to activate the aruco topic:
     # rostopic echo /cam01_aruco_single/marker
     # step2.4: run this node
-    # get result, for example: 0.465166 -0.42590476  0.37634892 -0.20534141 -0.02751783  0.97597023 -0.06752613
+    # get result, for example:  0.38965558 -0.72122679  0.37790981 -0.21007309  0.02287553  0.96681124 0.14360372
 
 
 def adjust_camera_02():
@@ -69,7 +69,7 @@ def adjust_camera_02():
     position1_x = 0
     position1_y = -0.2348
     num_of_x_incr_blocks = -3  # if this is negative, put the -x-y corner to the left of the grid
-    num_of_y_incr_blocks = 1
+    num_of_y_incr_blocks = 3
     len_of_x = 0.068  # JBL
     len_of_y = 0.082  # JBL
     x_to_aruco_center = 0.03 if num_of_x_incr_blocks >= 0 else -0.03  # if num_of_x_incr_blocks is negative, this should be negative
@@ -87,9 +87,9 @@ def adjust_camera_02():
     # step2.3: run the command in a terminal continuously to activate the aruco topic:
     # rostopic echo /cam02_aruco_single/marker
     # step2.4: run this node
-    # get result, for example: -0.54326354 -0.37640119  0.37693942 -0.00958675  0.23628084  0.01173544 0.97156664
+    # get result, for example: -0.5634987  -0.3820198   0.37387478  0.03354215  0.22829152 -0.17619918 0.95692829
 
 
 if __name__ == "__main__":
-    # adjust_camera_01()
-    adjust_camera_02()
+    adjust_camera_01()
+    # adjust_camera_02()
