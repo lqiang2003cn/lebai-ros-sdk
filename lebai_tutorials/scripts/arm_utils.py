@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 import rospy
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, PoseStamped
 from tf.transformations import translation_matrix, quaternion_matrix, euler_from_quaternion, translation_from_matrix, \
     quaternion_from_matrix
 
@@ -270,6 +270,21 @@ def get_circle_pose_by_pose_msg(pose_msg):
     return prepick_pos, prepick_ori
 
 
+def get_target_quant_from_obj_position(obj_pos_in_world):
+    obj_pos_zero_z = copy.deepcopy(obj_pos_in_world)
+    obj_pos_zero_z[2] = 0
+    m_new = np.eye(4, 4)
+    # y axis
+    m_new[0:3, 1] = [0, 0, -1]
+    # z axis
+    m_new[0:3, 2] = unit_vector(obj_pos_zero_z)
+    # x axis
+    m_new[0:3, 0] = np.cross(m_new[0:3, 1], m_new[0:3, 2])
+    quat = quaternion_from_matrix(m_new)
+
+    return quat
+
+
 def get_pose_msg_from_pos_and_ori(pos, ori):
     pose = Pose()
     pose.position.x = pos[0]
@@ -279,6 +294,19 @@ def get_pose_msg_from_pos_and_ori(pos, ori):
     pose.orientation.y = ori[1]
     pose.orientation.z = ori[2]
     pose.orientation.w = ori[3]
+    return pose
+
+
+def get_pose_stamped_msg_from_pos_and_ori(frame_id, pos, ori):
+    pose = PoseStamped()
+    pose.header.frame_id = frame_id
+    pose.pose.position.x = pos[0]
+    pose.pose.position.y = pos[1]
+    pose.pose.position.z = pos[2]
+    pose.pose.orientation.x = ori[0]
+    pose.pose.orientation.y = ori[1]
+    pose.pose.orientation.z = ori[2]
+    pose.pose.orientation.w = ori[3]
     return pose
 
 

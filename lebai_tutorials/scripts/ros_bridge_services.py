@@ -11,7 +11,7 @@ import moveit_msgs.msg as mm
 import numpy as np
 import rospy
 from aruco_msgs.msg import MarkerArray
-from geometry_msgs.msg import TransformStamped, Pose
+from geometry_msgs.msg import TransformStamped, Pose, PoseStamped
 from tf2_ros import StaticTransformBroadcaster
 
 from lebai_tutorials.srv import JsonInfo
@@ -34,8 +34,7 @@ class RosBridgeServices:
         # init moveit
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
-        self.group_name = "manipulator"
-        self.manipulator_group = moveit_commander.MoveGroupCommander(self.group_name)
+        self.manipulator_group = moveit_commander.MoveGroupCommander("manipulator")
         self.joint1_group = moveit_commander.MoveGroupCommander("joint1_group")
         self.display_trajectory_publisher = rospy.Publisher(display_traj_topic, mm.DisplayTrajectory, queue_size=20)
         self.planning_frame = self.manipulator_group.get_planning_frame()
@@ -43,9 +42,11 @@ class RosBridgeServices:
 
         # init fields
         self.aruco_list = None
+        self.target_pose = None
 
         # subscribes
         rospy.Subscriber("/aruco_marker_publisher/markers", MarkerArray, self.aruco_call_back)
+        rospy.Subscriber("/target_pose", PoseStamped, self.target_pose_callback)
 
         # creating services
         rospy.Service('get_goods_info', JsonInfo, self.get_goods_info)
@@ -54,6 +55,9 @@ class RosBridgeServices:
 
         # add scene objects
         self.add_objects_to_scene()
+
+    def target_pose_callback(self, target_pose):
+        self.target_pose = copy.deepcopy(target_pose.pose)
 
     def aruco_call_back(self, marker_array):
         self.aruco_list = marker_array.markers
@@ -354,7 +358,7 @@ class RosBridgeServices:
             tf_publisher.sendTransform(static_transformStamped)
             rate.sleep()
 
-    def plan_and_exe_by_pose(self, object_pose):
+    def plan_and_exe_by_target_pose(self, object_pose):
         for ti in range(5):
             waypoints = [object_pose]
             is_plan_found = False
@@ -380,13 +384,14 @@ if __name__ == "__main__":
     ros_services = RosBridgeServices()
     curr_pose = ros_services.get_curr_pose()
     # get xy plan of cup center
-    # -0.01697206 -0.46031969
-    curr_pose.position.x = -0.01697206
-    curr_pose.position.y = -0.46031969
 
     # calculate cup orientation and change the pose orientation
-
-    ros_services.plan_and_exe_by_pose(curr_pose)
+    # center = [-0.0169273, -0.46036449, 0.07552745]
+    # target_position = [center[0], center[1], curr_pose.position.z]
+    # target_quant = autil.get_target_quant_from_obj_position(center)
+    # target_pose = autil.get_pose_msg_from_pos_and_ori(target_position, target_quant)
+    if ros_services.target_pose is not None:
+        ros_services.plan_and_exe_by_target_pose(ros_services.target_pose)
 
     # ros_services.
     # rospy.spin()
