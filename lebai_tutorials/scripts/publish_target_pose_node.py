@@ -1,32 +1,162 @@
 import moveit_commander
+import numpy as np
+import ros_numpy as rnp
 import rospy
+import tf
+from cv_bridge import CvBridge
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import Image
+from sensor_msgs.msg import PointCloud2
+
 import arm_utils as autil
+import utils
 
 
 class LqPublish(object):
 
     def __init__(self):
         self.manipulator_group = moveit_commander.MoveGroupCommander("manipulator")
-        self.sleep_rate = rospy.Rate(1.0)
         self.pub_target_pose = rospy.Publisher("/target_pose", PoseStamped, queue_size=1)
+        self.cam01_rgb = None
+        self.cam02_rgb = None
+        self.cam01_pc = None
+        self.cam02_pc = None
+        self.texts = None
+        self.br = CvBridge()
+        self.sleep_rate = rospy.Rate(1.0)
+        self.target_pose_sleep_rate = rospy.Rate(1)
+
+        rospy.Subscriber("/ob_camera_01/color/image_raw", Image, self.cam01_rgb_callback)
+        rospy.Subscriber("/ob_camera_02/color/image_raw", Image, self.cam02_rgb_callback)
+        rospy.Subscriber("/ob_camera_01/depth_registered/points", PointCloud2, self.cam01_pc_callback)
+        rospy.Subscriber("/ob_camera_02/depth_registered/points", PointCloud2, self.cam02_pc_callback)
+
+    def cam01_rgb_callback(self, msg):
+        self.cam01_rgb = self.br.imgmsg_to_cv2(msg)
+
+    def cam02_rgb_callback(self, msg):
+        self.cam02_rgb = self.br.imgmsg_to_cv2(msg)
+
+    def cam01_pc_callback(self, msg):
+        self.cam01_pc = msg
+
+    def cam02_pc_callback(self, msg):
+        self.cam02_pc = msg
+
+    def request_owl_vit(self):
+        while self.cam01_rgb is None:
+            print "waiting for image"
+            self.sleep_rate.sleep()
+
+        while self.cam02_rgb is None:
+            print "waiting for image"
+            self.sleep_rate.sleep()
+
+        while self.cam01_pc is None:
+            print "waiting for pointcloud"
+            self.sleep_rate.sleep()
+
+        while self.cam02_pc is None:
+            print "waiting for pointcloud"
+            self.sleep_rate.sleep()
+
+        ################## Whole Steps:Start ##################
+        # get transform masks
+        target_frame = "base_link"
+        cam_frames = ["ob_camera_01_color_optical_frame", "ob_camera_02_color_optical_frame"]
+        listener = tf.TransformListener()
+        listener.clear()
+        base_to_cam_matrix_list = []
+        for cf in cam_frames:
+            while not rospy.is_shutdown():
+                try:
+                    listener.waitForTransform(target_frame, cf, rospy.Time(), rospy.Duration(4))
+                    translation, rotation = listener.lookupTransform(target_frame, cf, rospy.Time(0))
+                    base_to_cam_matrix_list.append(listener.fromTranslationRotation(translation, rotation))
+                    break
+                except Exception as e:
+                    assert e
+                    self.sleep_rate.sleep()
+
+        json_data = {
+            "cameras": ["cam01", "cam02"],
+            "images": [self.cam01_rgb.tolist(), self.cam02_rgb.tolist()],
+            # "pc_points": [cam01_pc_points.tolist(), cam02_pc_points.tolist()],
+            # "pc_rgbs": [cam01_pc_rgb.tolist(), cam02_pc_rgb.tolist()],
+            "texts": [self.texts, self.texts]
+        }
+        response = utils.post_json_no_proxy("handle_all_json", json_data)
+
+        # get masked points: using mask to filter point cloud
+        mask_list = response.json()['mask_list']
+        pc_list = [self.cam01_pc, self.cam02_pc]
+        filtered_points_list = []
+        filtered_rgbs_list = []
+        for i, m in enumerate(mask_list):
+            m_np = np.array(m)[0]  # assuming there is only one mask?
+            pc_array = rnp.point_cloud2.pointcloud2_to_array(pc_list[i]).reshape((480, 640))[m_np]
+            filtered_points_list.append(rnp.point_cloud2.get_xyz_points(pc_array))
+            pc_rgb_split = rnp.point_cloud2.split_rgb_field(pc_array)
+            pc_rgbs = np.zeros(pc_rgb_split.shape + (3,), dtype=np.int)
+            pc_rgbs[..., 0] = pc_rgb_split['r']
+            pc_rgbs[..., 1] = pc_rgb_split['g']
+            pc_rgbs[..., 2] = pc_rgb_split['b']
+            filtered_rgbs_list.append(pc_rgbs)
+
+        # transform masked points
+        transformed_points_list = []
+        for i in range(len(cam_frames)):
+            filtered_points = filtered_points_list[i]
+            filtered_points_extend = np.c_[filtered_points, np.ones(len(filtered_points))]
+            base_to_cam_matrix = base_to_cam_matrix_list[i]
+            transformed_points = np.einsum('ij,kj->ki', base_to_cam_matrix, filtered_points_extend)
+            transformed_points_list.append(np.delete(transformed_points, 3, 1))
+
+        # merge points: for two cameras
+        all_points = np.concatenate([transformed_points_list[0], transformed_points_list[1]], axis=0)
+        all_rgbs = np.concatenate([filtered_rgbs_list[0], filtered_rgbs_list[1]], axis=0)
+
+        # center without removing outlier
+        center = np.mean(all_points, axis=0)
+
+        # Saving:
+        # np.save("all_points.npy", all_points)
+        # np.save("all_rgbs.npy", all_rgbs)
+        # Load savings:
+        # all_points = np.load("all_points.npy")
+        # all_rgbs = np.load("all_rgbs.npy")
+
+        # calculate center with outlier removal
+        pc_json_data = {
+            "all_points": all_points.tolist(),
+            "all_rgbs": all_rgbs.tolist()
+        }
+        outlier_resp = utils.post_json_no_proxy("handle_outlier", pc_json_data)
+        outlier_resp_json = outlier_resp.json()
+        filtered_all_points_np = np.array(outlier_resp_json['filtered_all_points'])
+        filtered_center = np.mean(filtered_all_points_np, axis=0)
+        ################## Whole Steps:End ##################
+
+        # todo: compare with aruco
+
+        print 'filtered center' + str(filtered_center)
+        return filtered_center
+
+
 
     def start(self):
         rospy.loginfo("Publishing Information")
         while not rospy.is_shutdown():
-            curr_pose = self.manipulator_group.get_current_pose().pose
-            # center = [0.01409538, -0.64197104,  0.06132776]
-            # center = [0.00192296, -0.64061056,  0.06496488]
-            center = [0.00237557, -0.64110667, 0.06436856]
-            # target_position = [center[0], center[1], curr_pose.position.z]
+            center = self.request_owl_vit()
             target_position = center
             target_quant = autil.get_target_quant_from_obj_position(center)
             target_pose = autil.get_pose_stamped_msg_from_pos_and_ori("base_link", target_position, target_quant)
             self.pub_target_pose.publish(target_pose)
-            self.sleep_rate.sleep()
+            self.target_pose_sleep_rate.sleep()
 
 
 if __name__ == '__main__':
     rospy.init_node("lq_publish", anonymous=True)
     my_node = LqPublish()
+    my_node.texts = ["yellow cup"]
     my_node.start()

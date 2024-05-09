@@ -364,38 +364,48 @@ class RosBridgeServices:
             tf_publisher.sendTransform(static_transformStamped)
             rate.sleep()
 
-    def go_to_rest_pose(self):
-        # go to height first
-        rest_pose = self.get_rest_pose()
-        waypoints = []
-        wpose = self.manipulator_group.get_current_pose().pose
-        wpose.position.z = rest_pose.position
-        wpose.position.y +=  0.2  # and sideways (y)
-        waypoints.append(copy.deepcopy(wpose))
-
-        wpose.position.x +=  0.1  # Second move forward/backwards in (x)
-        waypoints.append(copy.deepcopy(wpose))
-
-        wpose.position.y -=  0.1  # Third move sideways (y)
-        waypoints.append(copy.deepcopy(wpose))
-
-        # We want the Cartesian path to be interpolated at a resolution of 1 cm
-        # which is why we will specify 0.01 as the eef_step in Cartesian
-        # translation.  We will disable the jump threshold by setting it to 0.0,
-        # ignoring the check for infeasible jumps in joint space, which is sufficient
-        # for this tutorial.
-        (plan, fraction) = move_group.compute_cartesian_path(
-            waypoints,   # waypoints to follow
-            0.01,        # eef_step
-            0.0)
-
-def plan_and_exe_by_target_pose(self, object_pose):
+    def go_to_target_pose(self):
         while self.target_pose is None:
             print "waiting for target pose"
             self.sleep_rate.sleep()
 
+        # only change xy and orientation
+        waypoints = []
+        move_xy_and_pose = copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+        move_xy_and_pose.position.x = self.target_pose.position.x
+        move_xy_and_pose.position.y = self.target_pose.position.y
+        move_xy_and_pose.orientation = self.target_pose.orientation
+        waypoints.append(move_xy_and_pose)
+        self.plan_and_exec_by_waypoints(waypoints)
+
+        # only change z
+        waypoints = []
+        move_z = copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+        move_z.position.z = self.target_pose.position.z
+        waypoints.append(move_z)
+        self.plan_and_exec_by_waypoints(waypoints)
+
+    def go_to_rest_pose(self):
+        rest_pose = self.get_rest_pose()
+
+        # only change position z
+        waypoints = []
+        move_z = copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+        move_z.position.z = rest_pose.position.z
+        waypoints.append(move_z)
+        self.plan_and_exec_by_waypoints(waypoints)
+
+        # only change xy and orientation
+        waypoints = []
+        move_xy_and_pose = copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+        move_xy_and_pose.position.x = rest_pose.position.x
+        move_xy_and_pose.position.y = rest_pose.position.y
+        move_xy_and_pose.orientation = rest_pose.orientation
+        waypoints.append(move_xy_and_pose)
+        self.plan_and_exec_by_waypoints(waypoints)
+
+    def plan_and_exec_by_waypoints(self, waypoints):
         for ti in range(5):
-            waypoints = [object_pose]
             is_plan_found = False
             ori_con = self.get_orientation_constraint(0.01, 0.01, 0.01)
             self.manipulator_group.set_path_constraints(ori_con)
@@ -411,21 +421,37 @@ def plan_and_exe_by_target_pose(self, object_pose):
             else:
                 print('cartisian plan not found')
 
-    def get_curr_pose(self):
-        return copy.deepcopy(self.manipulator_group.get_current_pose().pose)
+    def close_gripper(self):
+        assert self
+        # close gripper
+        rospy.wait_for_service('/io_service/set_gripper_position')
+        try:
+            gripper_force_controller = rospy.ServiceProxy('/io_service/set_gripper_force', SetGripper)
+            gripper_pos_controller = rospy.ServiceProxy('/io_service/set_gripper_position', SetGripper)
+            print gripper_force_controller.call(5)
+            print gripper_pos_controller.call(0.0)
+        except rospy.ServiceException as e:
+            print("Service call failed: %s" % e)
+
+    def open_gripper(self):
+        assert self
+        # open gripper
+        rospy.wait_for_service('/io_service/set_gripper_position')
+        try:
+            gripper_force_controller = rospy.ServiceProxy('/io_service/set_gripper_force', SetGripper)
+            gripper_pos_controller = rospy.ServiceProxy('/io_service/set_gripper_position', SetGripper)
+            print gripper_force_controller.call(5)
+            print gripper_pos_controller.call(100.0)
+        except rospy.ServiceException as e:
+            print("Service call failed: %s" % e)
 
 
 if __name__ == "__main__":
     ros_services = RosBridgeServices()
-    curr_pose = ros_services.get_curr_pose()
-    # get xy plan of cup center
 
-    # calculate cup orientation and change the pose orientation
-    # center = [-0.0169273, -0.46036449, 0.07552745]
-    # target_position = [center[0], center[1], curr_pose.position.z]
-    # target_quant = autil.get_target_quant_from_obj_position(center)
-    # target_pose = autil.get_pose_msg_from_pos_and_ori(target_position, target_quant)
-    ros_services.plan_and_exe_by_target_pose(ros_services.target_pose)
+    ros_services.open_gripper()
+    ros_services.go_to_target_pose()
+    ros_services.close_gripper()
+    ros_services.go_to_rest_pose()
 
-    # ros_services.
     # rospy.spin()
