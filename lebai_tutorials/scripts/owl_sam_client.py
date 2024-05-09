@@ -2,7 +2,7 @@
 # coding=utf-8
 
 from ctypes import *  # convert float to uint32
-
+import PIL.Image as PImage
 import geometry_msgs
 import numpy
 import numpy as np
@@ -159,6 +159,25 @@ class Nodo(object):
         print 'filtered center' + str(filtered_center)
         return filtered_center
 
+    def request_gpt4v(self):
+        host = "http://localhost:8082/"
+        method = "get_image_information"
+        while self.cam01_rgb is None:
+            print "waiting for image"
+            self.sleep_rate.sleep()
+
+        ################## Whole Steps:Start ##################
+        image01_path = "/home/lq/lq_projects/gpt_4_vision/data/images/cam01_temp.jpg"
+        pil_image = PImage.fromarray(self.cam01_rgb, "RGB")
+        pil_image.save(image01_path)
+
+        json_data = {
+            "cameras": ["cam01"],
+            "images_path": [image01_path],
+        }
+        response = utils.post_json_no_proxy(method, json_data, host=host)
+        print response.json()
+
     def start(self):
         rospy.loginfo("Timing images")
         # rospy.spin()
@@ -173,9 +192,14 @@ class Nodo(object):
 if __name__ == '__main__':
     rospy.init_node("image_vis", anonymous=True)
     my_node = Nodo()
+
+    # gpt4v image info
+    my_node.request_gpt4v()
+
     # my_node.point_cloud_service()
     # my_node.texts = ["red block", "blue block", "yellow block", "green block"]
-    my_node.texts = ["yellow cup"]
-    cup_center = my_node.request_owl_vit()
-    # moveit
 
+    # my_node.texts = ["yellow cup"]
+    # cup_center = my_node.request_owl_vit()
+
+    # moveit

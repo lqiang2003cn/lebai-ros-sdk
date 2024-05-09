@@ -11,8 +11,8 @@ from tf.transformations import translation_matrix, quaternion_matrix, quaternion
 api_base = "http://localhost:8081/"
 
 
-def post_json_no_proxy(method, json):
-    api_full = api_base + method
+def post_json_no_proxy(method, json, host=api_base):
+    api_full = host + method
     session = requests.Session()
     session.trust_env = False
     response = session.post(api_full, headers={"Content-Type": "application/json"}, json=json)
