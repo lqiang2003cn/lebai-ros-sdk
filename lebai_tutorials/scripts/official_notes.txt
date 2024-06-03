@@ -4,6 +4,9 @@
 # start all: lebai moveit: control with moveit and run cameras
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=192.168.50.252 has_gripper:=1
 
+# only launch orbbec
+roslaunch orbbec_camera gemini2.launch
+
 # show aruco position for cameras
 rostopic echo -n 1 /cam01_aruco_marker_publisher/markers
 rostopic echo -n 1 /cam02_aruco_marker_publisher/markers
@@ -41,6 +44,7 @@ roslaunch rosbridge_server rosbridge_websocket.launch
 roslaunch orbbec_camera gemini2.launch
 roslaunch orbbec_camera pal_aruco_ros_single.launch
 
+
 # launch rviz
 rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
 
@@ -55,8 +59,7 @@ roslaunch lebai_lm3_support robot_interface_lm3_with_visual.launch robot_ip:=10.
 # lebai moveit: control with moveit
 roslaunch lebai_lm3_moveit_config run.launch sim:=false robot_ip:=10.20.17.1
 
-# launch orbbec
-roslaunch orbbec_camera gemini2.launch
+
 
 # launch rviz
 rosrun rviz rviz -d /home/lq/ws_orbbec/src/lebai-ros-sdk/lebai_tutorials/scripts/rviz_config.rviz
